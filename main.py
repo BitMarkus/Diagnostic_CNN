@@ -17,7 +17,7 @@ print(tf.__version__)
 DATA_DIR = pathlib.Path('550x442_300_autocontr/')
 # DATA_DIR = pathlib.Path('275x221/')
 CHCKPT_PTH = pathlib.Path("saved_weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5")
-SEED = 666      # 123
+SEED = 112      # 123
 
 # IMAGE PARAMETERS #
 # Small images:
@@ -82,7 +82,7 @@ model.compile(
 )
 
 # TRAIN MODEL #
-print("Train model:")
+print("Train model:", end='')
 history = model.fit(
     ds_train, 
     validation_data=ds_validation,

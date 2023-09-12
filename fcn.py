@@ -77,10 +77,11 @@ def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed):
     # Test dataset:
     # source: https://stackoverflow.com/questions/66036271/splitting-a-tensorflow-dataset-into-training-test-and-validation-sets-from-ker
     # determine how many batches of data are available in the validation set:
-    val_batches = tf.data.experimental.cardinality(ds_validation)
+    num_batches = tf.data.experimental.cardinality(ds_validation)
     # move the two-third of them (2/3 of 30% = 20%) to a test set
-    ds_test = ds_validation.take((2*val_batches) // 3)
-    ds_validation = ds_validation.skip((2*val_batches) // 3)
+    # // = rounded to the next smallest whole number = integer division
+    ds_test = ds_validation.take((2*num_batches) // 3)
+    ds_validation = ds_validation.skip((2*num_batches) // 3)
     return ds_train, ds_validation, ds_test
 
 # Normalize images from 8 bit to values between 0-1
@@ -132,12 +133,12 @@ def callbacks(checkpoint_path):
         save_best_only=True,            # save only the best model/weights
         verbose=1,                      # show messages
         save_freq='epoch',              # check after every epoch
-        initial_value_threshold=.95,)   # minimum/maximum value for saving
+        initial_value_threshold=.98,)   # minimum/maximum value for saving
     callbacks.append(model_checkpoint_callback)
     # Early stopping:
     early_stopping_callback = tf.keras.callbacks.EarlyStopping(
         monitor='val_accuracy', 
-        patience=15,            # 10-15
+        patience=20,            # 10-15
         start_from_epoch=40     # 40
     )
     callbacks.append(early_stopping_callback)
@@ -148,9 +149,42 @@ def callbacks(checkpoint_path):
         # 3) Type into console: tensorboard --logdir logs (<- Folder specified below)
         # 4) Go to shown URL: http://localhost:6006
         # 5) Go to "scalars" to see accuracy and loss
-        log_dir="logs", 
-        histogram_freq=1,
+        log_dir="logs",             # Directory to store log files
+        histogram_freq=0,           # frequency (in epochs) at which to compute activation histograms for the layers of the model
+        write_graph=True,           # whether to visualize the graph in Tensorboard
+        write_grads=False,          # whether to visualize gradient histograms in TensorBoard (histogram_freq must be greater than 0)
+        write_images=False,         # whether to write model weights to visualize as image in Tensorboard
+        update_freq="epoch",        # 'batch' or 'epoch' or integer.
     )
     callbacks.append(tensorboard_callback)
+    # Reduce learning rate on plateau: Does not properly work wioth this data
+    lr_reduction_callback = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='accuracy',
+        factor=0.1,
+        patience=5,
+        verbose=1,
+        mode='max',
+        min_delta=0.0001,
+        cooldown=1,
+        min_lr=0.000001,
+    )
+    # callbacks.append(lr_reduction_callback)
+    # Learning rate scheduler: reduces learning rate dependent on epoch index -> own function!
+    lr_scheduler_callback = tf.keras.callbacks.LearningRateScheduler(
+        lr_scheduler, 
+        verbose=1
+    )
+    callbacks.append(lr_scheduler_callback)
     return callbacks
+
+# Function for reducing the learning rate dependent on the epoch
+# For callback 'lr_scheduler_callback'
+def lr_scheduler(epoch, lr):
+  if(epoch < 60):
+    return lr
+  else:
+    if(epoch%10 == 0):
+        lr*=0.1
+    return lr
+
 
