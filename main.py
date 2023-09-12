@@ -17,7 +17,7 @@ print(tf.__version__)
 DATA_DIR = pathlib.Path('550x442_300_autocontr/')
 # DATA_DIR = pathlib.Path('275x221/')
 CHCKPT_PTH = pathlib.Path("saved_weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5")
-SEED = 555      # 123
+SEED = 666      # 123
 
 # IMAGE PARAMETERS #
 # Small images:

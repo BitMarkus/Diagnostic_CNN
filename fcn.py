@@ -123,10 +123,9 @@ def tune_img(ds_train, ds_validation, ds_test, autotune):
 # Function for callbacks
 def callbacks(checkpoint_path):
     callbacks = []
-    # Save best weights as checkpoint
-    # Best = highest validation accuracy
+    # Save best weights as checkpoint (highest validation accuracy):
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_path,            # Path to checkpoint file (not only folder)
+        filepath=checkpoint_path,       # Path to checkpoint file (not only folder)
         save_weights_only=True,         # False = whole model will be saved
         monitor='val_accuracy',         # Value to monitor
         mode='max',                     # max, min, auto fpr value to monitor
@@ -135,13 +134,14 @@ def callbacks(checkpoint_path):
         save_freq='epoch',              # check after every epoch
         initial_value_threshold=.95,)   # minimum/maximum value for saving
     callbacks.append(model_checkpoint_callback)
-    # Early stopping: Might make no sense as validation accuracy scatters a lot during training
+    # Early stopping:
     early_stopping_callback = tf.keras.callbacks.EarlyStopping(
         monitor='val_accuracy', 
         patience=15,            # 10-15
         start_from_epoch=40     # 40
     )
     callbacks.append(early_stopping_callback)
+    # Tensorboard:
     tensorboard_callback = tf.keras.callbacks.TensorBoard(
         # 1) Activate anaconda environment for tensorflow (tf_gpu)
         # 2) Go to folder where tensorflow script is (cd /home/markus/tensorflow/projects/Diagnostic_CNN)
@@ -151,6 +151,6 @@ def callbacks(checkpoint_path):
         log_dir="logs", 
         histogram_freq=1,
     )
-    # callbacks.append(tensorboard_callback)
+    callbacks.append(tensorboard_callback)
     return callbacks
 

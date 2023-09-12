@@ -2,9 +2,6 @@ import tensorflow as tf
 from tensorflow import keras
 from keras import layers, regularizers
 
-physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
 # Create network model according to:
 # https://machinelearningmastery.com/review-of-architectural-innovations-for-convolutional-neural-networks-for-image-classification/
 # Similar to VGG16
@@ -97,7 +94,7 @@ class CNNModel(keras.Model):
         x = self.classifier(x)
         return x
 
-    # Method to avoid in model summary for output shape "multiple"
+    # Method to avoid in model summary output shape "multiple"
     # Overrride model call method
     def model(self):
         x = keras.Input(self.shape)
