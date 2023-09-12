@@ -151,6 +151,6 @@ def callbacks(checkpoint_path):
         log_dir="logs", 
         histogram_freq=1,
     )
-    # callbacks.append(tensorboard_callback)
+    callbacks.append(tensorboard_callback)
     return callbacks
 
