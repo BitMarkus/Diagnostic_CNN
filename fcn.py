@@ -45,13 +45,13 @@ def print_acc_loss(history):
     plt.show()
 
 # Prepare training, validation and test dataset
-def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed):
+def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, categories):
     # Training dataset:
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,                               # directory with training images, classes in seperate folders
         labels='inferred',                      # lables are taken from subfolder names
         label_mode="int",                       # OR categorical, binary
-        class_names=['wt', 'ko'],
+        class_names=categories,
         color_mode='grayscale',                 # OR rgb
         batch_size=batch_size,
         image_size=(img_height, img_width),     # images will be reshaped if not in this size
@@ -65,7 +65,7 @@ def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed):
         data_dir,                              
         labels='inferred',                     
         label_mode="int",                       
-        class_names=['wt', 'ko'],
+        class_names=categories,
         color_mode='grayscale',                     
         batch_size=batch_size,
         image_size=(img_height, img_width),    
@@ -124,6 +124,7 @@ def tune_img(ds_train, ds_validation, ds_test, autotune):
 # Function for callbacks
 def callbacks(checkpoint_path):
     callbacks = []
+    
     # Save best weights as checkpoint (highest validation accuracy):
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path,       # Path to checkpoint file (not only folder)
@@ -135,13 +136,15 @@ def callbacks(checkpoint_path):
         save_freq='epoch',              # check after every epoch
         initial_value_threshold=.98,)   # minimum/maximum value for saving
     callbacks.append(model_checkpoint_callback)
+
     # Early stopping:
     early_stopping_callback = tf.keras.callbacks.EarlyStopping(
         monitor='val_accuracy', 
         patience=20,            # 10-15
         start_from_epoch=40     # 40
     )
-    callbacks.append(early_stopping_callback)
+    # callbacks.append(early_stopping_callback)
+
     # Tensorboard:
     tensorboard_callback = tf.keras.callbacks.TensorBoard(
         # 1) Activate anaconda environment for tensorflow (tf_gpu)
@@ -157,6 +160,15 @@ def callbacks(checkpoint_path):
         update_freq="epoch",        # 'batch' or 'epoch' or integer.
     )
     callbacks.append(tensorboard_callback)
+
+    # Learning rate scheduler: reduces learning rate dependent on epoch index -> own function!
+    lr_scheduler_callback = tf.keras.callbacks.LearningRateScheduler(
+        lr_scheduler, 
+        verbose=1
+    )
+    callbacks.append(lr_scheduler_callback)
+
+    """
     # Reduce learning rate on plateau: Does not properly work wioth this data
     lr_reduction_callback = tf.keras.callbacks.ReduceLROnPlateau(
         monitor='accuracy',
@@ -168,22 +180,25 @@ def callbacks(checkpoint_path):
         cooldown=1,
         min_lr=0.000001,
     )
-    # callbacks.append(lr_reduction_callback)
-    # Learning rate scheduler: reduces learning rate dependent on epoch index -> own function!
-    lr_scheduler_callback = tf.keras.callbacks.LearningRateScheduler(
-        lr_scheduler, 
-        verbose=1
-    )
-    callbacks.append(lr_scheduler_callback)
+    callbacks.append(lr_reduction_callback)
+    """
+
     return callbacks
 
 # Function for reducing the learning rate dependent on the epoch
 # For callback 'lr_scheduler_callback'
+# From epoch 60 the lr will be reduced by 90% every 10 epochs for three times
+# 1-59:     0.00001
+# 60-69:    0.000001 
+# 70-79:    0.0000001
+# 80-end:   0.00000001 
 def lr_scheduler(epoch, lr):
-  if(epoch < 60):
+  epoch_start = 60
+  epoch_end = 90
+  if(epoch < epoch_start):
     return lr
   else:
-    if(epoch%10 == 0):
+    if(epoch%10 == 0 and epoch_end < 90):
         lr*=0.1
     return lr
 

@@ -14,10 +14,15 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 print(tf.__version__)
 
 # PROGRAM PARAMETERS #
-DATA_DIR = pathlib.Path('550x442_300_autocontr/')
-# DATA_DIR = pathlib.Path('275x221/')
+# DATA_DIR = pathlib.Path('550x442_300_autocontr/')
+# CATEGORIES = ['wt', 'ko']
+# DATA_DIR = pathlib.Path('wt_test/')
+# CATEGORIES = ['wt1', 'wt2']
+DATA_DIR = pathlib.Path('ko_test/')
+CATEGORIES = ['ko1', 'ko2']
+
 CHCKPT_PTH = pathlib.Path("saved_weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5")
-SEED = 112      # 123
+SEED = 444      # 123
 
 # IMAGE PARAMETERS #
 # Small images:
@@ -42,7 +47,7 @@ DROPOUT = 0.5               # 0.5
 LEARNING_RATE = 0.00001    # 0.000005-0.00001 
 
 # GET TRAINING, VALIDATION, AND TEST DATA #
-ds_train, ds_validation, ds_test = fcn.get_ds(DATA_DIR, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED)
+ds_train, ds_validation, ds_test = fcn.get_ds(DATA_DIR, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED, CATEGORIES)
 
 # CLASS NAMES #
 class_names = ds_train.class_names
