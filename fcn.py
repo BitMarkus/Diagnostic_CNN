@@ -182,7 +182,6 @@ def callbacks(checkpoint_path):
     )
     callbacks.append(lr_reduction_callback)
     """
-
     return callbacks
 
 # Function for reducing the learning rate dependent on the epoch
@@ -193,12 +192,12 @@ def callbacks(checkpoint_path):
 # 70-79:    0.0000001
 # 80-end:   0.00000001 
 def lr_scheduler(epoch, lr):
-  epoch_start = 60
-  epoch_end = 90
+  epoch_start = 40      # 60
+  epoch_end = 100        # 90
   if(epoch < epoch_start):
     return lr
   else:
-    if(epoch%10 == 0 and epoch_end < 90):
+    if(epoch%20 == 0 and epoch < epoch_end):        # if(epoch%10 == 0 and epoch < epoch_end):
         lr*=0.1
     return lr
 
