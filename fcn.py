@@ -186,19 +186,17 @@ def callbacks(checkpoint_path):
 
 # Function for reducing the learning rate dependent on the epoch
 # For callback 'lr_scheduler_callback'
-# From epoch 60 the lr will be reduced by 90% every 10 epochs for three times
-# 1-59:     0.00001
-# 60-69:    0.000001 
-# 70-79:    0.0000001
-# 80-end:   0.00000001 
-def lr_scheduler(epoch, lr):
-  epoch_start = 40      # 60
-  epoch_end = 100        # 90
-  if(epoch < epoch_start):
-    return lr
-  else:
-    if(epoch%20 == 0 and epoch < epoch_end):        # if(epoch%10 == 0 and epoch < epoch_end):
-        lr*=0.1
-    return lr
+def lr_scheduler(epoch):
+    learning_rate = 1e-05
+    if epoch >= 40:
+        learning_rate = 1e-06
+    if epoch >= 60:
+        learning_rate = 1e-07
+    if epoch >= 80:
+        learning_rate = 1e-08
+    # Log learning rate for tensorboard
+    tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
+    return learning_rate
+
 
 

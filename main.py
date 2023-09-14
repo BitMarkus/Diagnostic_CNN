@@ -4,6 +4,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from tensorflow import keras
 import pathlib
+from datetime import datetime
 # Import own classes and functions
 import cnn
 import fcn
@@ -16,15 +17,18 @@ print(tf.__version__)
 # PROGRAM PARAMETERS #
 # DATA_DIR = pathlib.Path('img_550x442_300/')
 # CATEGORIES = ['wt', 'ko']
-# DATA_DIR = pathlib.Path('wt_test/')
-# CATEGORIES = ['wt1', 'wt2']
+DATA_DIR = pathlib.Path('wt_test/')
+CATEGORIES = ['wt1', 'wt2']
 # DATA_DIR = pathlib.Path('ko_test/')
 # CATEGORIES = ['ko1', 'ko2']
-DATA_DIR = pathlib.Path('same_test/')
-CATEGORIES = ['wt1', 'wt2']
-
+# DATA_DIR = pathlib.Path('same_test/')
+# CATEGORIES = ['wt1', 'wt2']
+# Path for saved weights
 CHCKPT_PTH = pathlib.Path("saved_weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5")
-SEED = 298      # 123
+# Path for tensorboard logs
+LOG_PTH = pathlib.Path("logs/")
+# Path for logging learning rate
+LOG_LR_PTH = LOG_PTH / "learning_rate/"
 
 # IMAGE PARAMETERS #
 # Small images:
@@ -38,15 +42,21 @@ IMG_CHANNELS = 1
 IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
+SEED = 621                  # 123
 BATCH_SIZE = 32             # 32
 INPUT_SHAPE = (BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 # INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS) <- Or this?
 VAL_SPLIT = 0.3             # 0.3
 NUM_CLASSES = 2             # 2
-NUM_EPOCHS = 100
+NUM_EPOCHS = 100            # 100
 L2_WEIGHT_DECAY = 0
 DROPOUT = 0.5               # 0.5
-LEARNING_RATE = 0.00001    # 0.000005-0.00001 
+# LEARNING_RATE = 0.00001   # is determined in the learning rate scheduler
+
+# Log learning rate
+# https://www.tensorflow.org/tensorboard/scalars_and_keras
+file_writer = tf.summary.create_file_writer(str(LOG_LR_PTH))
+file_writer.set_as_default()
 
 # GET TRAINING, VALIDATION, AND TEST DATA #
 ds_train, ds_validation, ds_test = fcn.get_ds(DATA_DIR, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED, CATEGORIES)
@@ -84,7 +94,7 @@ print()
 model.compile(
     # from_logits=False: Softmax on output layer
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-    optimizer=keras.optimizers.Adam(LEARNING_RATE),
+    optimizer=keras.optimizers.Adam(),
     metrics=["accuracy"],
 )
 
