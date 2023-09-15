@@ -14,7 +14,7 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 print("TensorFlow version: ", tf.__version__, "\n")
 
 # PROGRAM PARAMETERS #
-DATA_PTH = pathlib.Path('img_550x442_300/')
+DATA_PTH = pathlib.Path('img_550x442_200/')
 CATEGORIES = ['wt', 'ko']
 # DATA_PTH = pathlib.Path('wt_test/')
 # CATEGORIES = ['wt1', 'wt2']
@@ -38,7 +38,7 @@ IMG_CHANNELS = 1    # Image channels -> Grayscale = 1
 IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 632                  # 123
+SEED = 123                  # 123
 BATCH_SIZE = 32             # 32
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 VAL_SPLIT = 0.3             # 0.3
