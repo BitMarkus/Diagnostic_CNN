@@ -21,7 +21,7 @@ def print_img_batch(batch_size, ds, class_names):
     plt.show()
 
 # Prints accuracy and loss after training
-def print_acc_loss(train_history, eval_history, plot_path, seed, show_plot=True, save_plot=True):
+def create_metrics_plot(train_history, eval_history, plot_path, seed, show_plot=True, save_plot=True):
     # Accuracy
     acc = train_history.history['accuracy']
     val_acc = train_history.history['val_accuracy']
@@ -30,8 +30,6 @@ def print_acc_loss(train_history, eval_history, plot_path, seed, show_plot=True,
     val_loss = train_history.history['val_loss']
     # Learning rate
     lr = train_history.history['lr']
-    # Evaluation history (in filename)
-    eval_acc = eval_history[1]
     # Number of epochs
     epochs_range = range(1, len(acc) + 1)
     # Draw plots
@@ -60,23 +58,26 @@ def print_acc_loss(train_history, eval_history, plot_path, seed, show_plot=True,
     # Reduce unnecessary whitespaces around the plots
     # https://stackoverflow.com/questions/4042192/reduce-left-and-right-margins-in-matplotlib-plot
     plt.tight_layout()
-
     # Save plot
     if(save_plot):
-        # Create folder if not exists
-        if not plot_path.exists():
-            os.mkdir(plot_path)
-        # Get date and time
-        date_time = datetime.now().strftime("%Y_%m_%d-%H_%M")
-        # Generate filename
-        filename = f"{date_time}-tacc{eval_acc:.2f}-seed{seed}.png"
-        # Save plot
-        plt.savefig(str(plot_path)+'/'+filename, bbox_inches='tight')
-
+        save_metrics_plot(eval_history, plot_path, seed)
     # Show plot
     if(show_plot):
         plt.show()
 
+# Function to save the acc/loss plot
+def save_metrics_plot(eval_history, plot_path, seed):
+    # Create folder if not exists
+    if not plot_path.exists():
+        os.mkdir(plot_path)
+    # Evaluation accuracy (for filename)
+    eval_acc = eval_history[1]
+    # Get date and time
+    date_time = datetime.now().strftime("%Y_%m_%d-%H_%M")
+    # Generate filename
+    filename = f"{date_time}-tacc{eval_acc:.2f}-seed{seed}.png"
+    # Save plot
+    plt.savefig(str(plot_path) + '/' + filename, bbox_inches='tight')
 
 # Prepare training, validation and test dataset
 def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, categories):
@@ -202,20 +203,6 @@ def callbacks(checkpoint_path):
     )
     callbacks.append(lr_scheduler_callback)
 
-    """
-    # Reduce learning rate on plateau: Does not properly work wioth this data
-    lr_reduction_callback = tf.keras.callbacks.ReduceLROnPlateau(
-        monitor='accuracy',
-        factor=0.1,
-        patience=5,
-        verbose=1,
-        mode='max',
-        min_delta=0.0001,
-        cooldown=1,
-        min_lr=0.000001,
-    )
-    callbacks.append(lr_reduction_callback)
-    """
     return callbacks
 
 # Function for reducing the learning rate dependent on the epoch

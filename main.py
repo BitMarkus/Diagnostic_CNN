@@ -4,7 +4,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from tensorflow import keras
 import pathlib
-from datetime import datetime
 # Import own classes and functions
 import cnn
 import fcn
@@ -12,7 +11,7 @@ import fcn
 # Experimental:
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
-print("TensorFlow version: ", tf.__version__)
+print("TensorFlow version: ", tf.__version__, "\n")
 
 # PROGRAM PARAMETERS #
 DATA_PTH = pathlib.Path('img_550x442_300/')
@@ -35,21 +34,19 @@ PLOT_PTH = pathlib.Path("plots/" + '_'.join(CATEGORIES) + "/")
 # IMAGE PARAMETERS #
 IMG_HEIGHT = 442
 IMG_WIDTH = 550
-# Image channels -> Grayscale = 1
-IMG_CHANNELS = 1    
+IMG_CHANNELS = 1    # Image channels -> Grayscale = 1
 IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 925                  # 123
+SEED = 632                  # 123
 BATCH_SIZE = 32             # 32
-INPUT_SHAPE = (BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
-# INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS) <- Or this?
+INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 VAL_SPLIT = 0.3             # 0.3
 NUM_CLASSES = 2             # 2
 NUM_EPOCHS = 100            # 100
 L2_WEIGHT_DECAY = 0
 DROPOUT = 0.5               # 0.5
-# LEARNING_RATE = 0.00001   # is determined in the learning rate scheduler
+LEARNING_RATE = 0.00001     # Is also determined in the learning rate scheduler
 
 # Log learning rate in tensorboard
 # https://www.tensorflow.org/tensorboard/scalars_and_keras
@@ -61,8 +58,7 @@ ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, 
 
 # CLASS NAMES #
 class_names = ds_train.class_names
-print("Classes: ", end='')
-print(class_names)
+print("Classes: ", class_names, "\n")
 
 # VIZUALIZE DATA #
 # fcn.print_img_batch(BATCH_SIZE, ds_train, class_names)
@@ -92,12 +88,12 @@ print()
 model.compile(
     # from_logits=False: Softmax on output layer
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-    optimizer=keras.optimizers.Adam(),
+    optimizer=keras.optimizers.Adam(LEARNING_RATE),
     metrics=["accuracy"],
 )
 
 # TRAIN MODEL #
-print("Train model:", end='')
+print("Train model:")
 train_history = model.fit(
     ds_train, 
     validation_data=ds_validation,
@@ -112,7 +108,6 @@ train_history = model.fit(
 # EVALUATE MODEL #
 print("\nTest model:")
 eval_history = model.evaluate(ds_test, verbose=1)
-# print(eval_history)
 
 # PLOT ACCURACY AND LOSS #
-fcn.print_acc_loss(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
+fcn.create_metrics_plot(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
