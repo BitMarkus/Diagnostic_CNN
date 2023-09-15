@@ -1,6 +1,8 @@
 import tensorflow as tf
 import math
 import matplotlib.pyplot as plt
+import os
+from datetime import datetime
 
 # Prints first batch of images from the training dataset
 def print_img_batch(batch_size, ds, class_names):
@@ -19,30 +21,62 @@ def print_img_batch(batch_size, ds, class_names):
     plt.show()
 
 # Prints accuracy and loss after training
-def print_acc_loss(history):
+def print_acc_loss(train_history, eval_history, plot_path, seed, show_plot=True, save_plot=True):
     # Accuracy
-    acc = history.history['accuracy']
-    val_acc = history.history['val_accuracy']
+    acc = train_history.history['accuracy']
+    val_acc = train_history.history['val_accuracy']
     # Loss
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
+    loss = train_history.history['loss']
+    val_loss = train_history.history['val_loss']
+    # Learning rate
+    lr = train_history.history['lr']
+    # Evaluation history (in filename)
+    eval_acc = eval_history[1]
     # Number of epochs
     epochs_range = range(1, len(acc) + 1)
     # Draw plots
-    plt.figure(figsize=(10, 5))
-    plt.subplot(1, 2, 1)
-    plt.plot(epochs_range, acc, label='Training Accuracy')
-    plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+    plt.figure(figsize=(15, 5))
+    # Accuracy plot:
+    plt.subplot(1, 3, 1)
+    plt.plot(epochs_range, acc, label='Training Accuracy', color='green')
+    plt.plot(epochs_range, val_acc, label='Validation Accuracy', color='red')
     plt.legend(loc='lower right')
     plt.title('Training and Validation Accuracy')
-    plt.subplot(1, 2, 2)
+    # Loss plot:
+    plt.subplot(1, 3, 2)
     # Set the range of y-axis
     plt.ylim(0, 5)
-    plt.plot(epochs_range, loss, label='Training Loss')
-    plt.plot(epochs_range, val_loss, label='Validation Loss')
+    plt.plot(epochs_range, loss, label='Training Loss', color='green')
+    plt.plot(epochs_range, val_loss, label='Validation Loss', color='red')
     plt.legend(loc='upper right')
     plt.title('Training and Validation Loss')
-    plt.show()
+    # Learning rate plot:
+    plt.subplot(1, 3, 3)
+    # convert y-axis to Logarithmic scale
+    plt.yscale("log")
+    plt.plot(epochs_range, lr, label='Learning Rate', color='blue')
+    plt.legend(loc='upper right')
+    plt.title('Learning Rate')
+    # Reduce unnecessary whitespaces around the plots
+    # https://stackoverflow.com/questions/4042192/reduce-left-and-right-margins-in-matplotlib-plot
+    plt.tight_layout()
+
+    # Save plot
+    if(save_plot):
+        # Create folder if not exists
+        if not plot_path.exists():
+            os.mkdir(plot_path)
+        # Get date and time
+        date_time = datetime.now().strftime("%Y_%m_%d-%H_%M")
+        # Generate filename
+        filename = f"{date_time}-tacc{eval_acc:.2f}-seed{seed}.png"
+        # Save plot
+        plt.savefig(str(plot_path)+'/'+filename, bbox_inches='tight')
+
+    # Show plot
+    if(show_plot):
+        plt.show()
+
 
 # Prepare training, validation and test dataset
 def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, categories):

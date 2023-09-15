@@ -12,29 +12,27 @@ import fcn
 # Experimental:
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
-print(tf.__version__)
+print("TensorFlow version: ", tf.__version__)
 
 # PROGRAM PARAMETERS #
-# DATA_DIR = pathlib.Path('img_550x442_300/')
-# CATEGORIES = ['wt', 'ko']
-DATA_DIR = pathlib.Path('wt_test/')
-CATEGORIES = ['wt1', 'wt2']
-# DATA_DIR = pathlib.Path('ko_test/')
-# CATEGORIES = ['ko1', 'ko2']
-# DATA_DIR = pathlib.Path('same_test/')
+DATA_PTH = pathlib.Path('img_550x442_300/')
+CATEGORIES = ['wt', 'ko']
+# DATA_PTH = pathlib.Path('wt_test/')
 # CATEGORIES = ['wt1', 'wt2']
+# DATA_PTH = pathlib.Path('ko_test/')
+# CATEGORIES = ['ko1', 'ko2']
+# DATA_PTH = pathlib.Path('same_test/')
+# CATEGORIES = ['wt11', 'wt12']
 # Path for saved weights
-CHCKPT_PTH = pathlib.Path("saved_weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5")
+CHCKPT_PTH = pathlib.Path("weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5")
 # Path for tensorboard logs
 LOG_PTH = pathlib.Path("logs/")
 # Path for logging learning rate
-LOG_LR_PTH = LOG_PTH / "learning_rate/"
+LOG_LR_PTH = LOG_PTH / "scalars/learning_rate/"
+# Path auto save the plots at the end of the training
+PLOT_PTH = pathlib.Path("plots/" + '_'.join(CATEGORIES) + "/") 
 
 # IMAGE PARAMETERS #
-# Small images:
-# IMG_HEIGHT = 221
-# IMG_WIDTH = 275
-# Large images:
 IMG_HEIGHT = 442
 IMG_WIDTH = 550
 # Image channels -> Grayscale = 1
@@ -42,7 +40,7 @@ IMG_CHANNELS = 1
 IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 621                  # 123
+SEED = 925                  # 123
 BATCH_SIZE = 32             # 32
 INPUT_SHAPE = (BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 # INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS) <- Or this?
@@ -53,13 +51,13 @@ L2_WEIGHT_DECAY = 0
 DROPOUT = 0.5               # 0.5
 # LEARNING_RATE = 0.00001   # is determined in the learning rate scheduler
 
-# Log learning rate
+# Log learning rate in tensorboard
 # https://www.tensorflow.org/tensorboard/scalars_and_keras
 file_writer = tf.summary.create_file_writer(str(LOG_LR_PTH))
 file_writer.set_as_default()
 
 # GET TRAINING, VALIDATION, AND TEST DATA #
-ds_train, ds_validation, ds_test = fcn.get_ds(DATA_DIR, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED, CATEGORIES)
+ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED, CATEGORIES)
 
 # CLASS NAMES #
 class_names = ds_train.class_names
@@ -100,7 +98,7 @@ model.compile(
 
 # TRAIN MODEL #
 print("Train model:", end='')
-history = model.fit(
+train_history = model.fit(
     ds_train, 
     validation_data=ds_validation,
     epochs=NUM_EPOCHS,
@@ -109,11 +107,12 @@ history = model.fit(
 )
 
 # LOAD MODEL WEIGHTS #
-# model.load_weights("saved_models/checkpoint-55-1.00.hdf5")  # checkpoint-39-0.99.hdf5 checkpoint-55-1.00.hdf5
+# model.load_weights("saved_models/checkpoint-55-1.00.hdf5")
 
 # EVALUATE MODEL #
 print("\nTest model:")
-model.evaluate(ds_test, verbose=1)
+eval_history = model.evaluate(ds_test, verbose=1)
+# print(eval_history)
 
 # PLOT ACCURACY AND LOSS #
-fcn.print_acc_loss(history)
+fcn.print_acc_loss(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
