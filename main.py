@@ -3,10 +3,14 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from tensorflow import keras
+from keras.models import Model
 import pathlib
+import numpy as np
 # Import own classes and functions
-import cnn
+# import cnn
+import cnn2
 import fcn
+import visual
 
 # Experimental:
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -14,7 +18,7 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 print("TensorFlow version: ", tf.__version__, "\n")
 
 # PROGRAM PARAMETERS #
-DATA_PTH = pathlib.Path('img_550x442_200/')
+DATA_PTH = pathlib.Path('img_550x442_300/')
 CATEGORIES = ['wt', 'ko']
 # DATA_PTH = pathlib.Path('wt_test/')
 # CATEGORIES = ['wt1', 'wt2']
@@ -30,21 +34,23 @@ LOG_PTH = pathlib.Path("logs/")
 LOG_LR_PTH = LOG_PTH / "scalars/learning_rate/"
 # Path auto save the plots at the end of the training
 PLOT_PTH = pathlib.Path("plots/" + '_'.join(CATEGORIES) + "/") 
+# Path for visualizations
+VIS_PHT = pathlib.Path("visualizations/")
 
 # IMAGE PARAMETERS #
 IMG_HEIGHT = 442
 IMG_WIDTH = 550
 IMG_CHANNELS = 1    # Image channels -> Grayscale = 1
 IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
+INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
 SEED = 123                  # 123
 BATCH_SIZE = 32             # 32
-INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 VAL_SPLIT = 0.3             # 0.3
 NUM_CLASSES = 2             # 2
 NUM_EPOCHS = 100            # 100
-L2_WEIGHT_DECAY = 0
+L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
 LEARNING_RATE = 0.00001     # Is also determined in the learning rate scheduler
 
@@ -77,12 +83,18 @@ ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)
 callback_list = fcn.callbacks(CHCKPT_PTH)
 
 # CREATE MODEL #
+"""
+# Create model using subclassing
 model = cnn.CNNModel(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)
 # Build model and print summary
 model.build(INPUT_SHAPE)
 # A normal summary call does not display output shapes (only 'multiple'):
 print(model.model().summary())
-print()
+"""
+# Create model from function
+model = cnn2.cnn_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)
+# Print summary of the model
+print(model.summary())
 
 # COMPILE MODEL #
 model.compile(
@@ -91,7 +103,7 @@ model.compile(
     optimizer=keras.optimizers.Adam(LEARNING_RATE),
     metrics=["accuracy"],
 )
-
+"""
 # TRAIN MODEL #
 print("Train model:")
 train_history = model.fit(
@@ -101,13 +113,31 @@ train_history = model.fit(
     callbacks=callback_list, 
     verbose=1,
 )
-
+"""
 # LOAD MODEL WEIGHTS #
-# model.load_weights("saved_models/checkpoint-55-1.00.hdf5")
+model.load_weights("weights/checkpoint-52-1.00.hdf5")
 
 # EVALUATE MODEL #
-print("\nTest model:")
-eval_history = model.evaluate(ds_test, verbose=1)
+# print("\nTest model:")
+# eval_history = model.evaluate(ds_test, verbose=1)
+
+# VISUALIZE #
+# Show first x filters of a cnn layer
+# visual.plot_filters_of_layers(model, 10)
+
+# Load image
+img = keras.utils.load_img(
+    DATA_PTH / "wt/WT_01_m191_ORG.png",
+    color_mode='grayscale', 
+    target_size=(IMG_HEIGHT, IMG_WIDTH)
+)
+# Convert PIL object to numpy array
+img = keras.utils.img_to_array(img)
+img = np.expand_dims(img, axis=0)
+img = img/255.0
+
+# Plot feature maps
+visual.plot_feature_maps_of_layers(model, img, 5, 5)
 
 # PLOT ACCURACY AND LOSS #
-fcn.create_metrics_plot(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
+# fcn.create_metrics_plot(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
