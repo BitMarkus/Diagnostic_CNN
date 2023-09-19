@@ -124,12 +124,12 @@ model.load_weights("weights/checkpoint-52-1.00.hdf5")
 # Show first x filters of a cnn layer
 # vis.plot_filters_of_layers(model, 10)
 # Load image
-img_class = 'ko'
-img_name = 'KO_01_m501_ORG.png'
+img_class = 'wt'
+img_name = 'WT_01_m277_ORG.png'
 img = fcn.load_img(DATA_PTH, img_class, img_name)
 img_info = {"image":img, "class":img_class, "name":img_name}
 # Plot feature maps
-vis.plot_image(img_info)
+vis.plot_image(img_info, VIS_PHT, save_plot=True, show_plot=True)
 vis.plot_feature_maps_of_layers(model, VIS_PHT, img_info, 5, 5, save_plot=True, show_plot=False)
 
 # PLOT ACCURACY AND LOSS #

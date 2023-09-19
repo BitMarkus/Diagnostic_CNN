@@ -74,8 +74,8 @@ def plot_feature_maps_of_a_layer(feature_maps,
                                  save_plot=False, 
                                  show_plot=False):
     # Set title
-    plt.figure(figsize=(12, 12))
-    title = f'Image: {img_info["name"]}, Category: {img_info["class"]}\n'
+    plt.figure(figsize=(18, 13))
+    title = f'Image: {img_info["name"]}, Class: {img_info["class"]}\n'
     title += f'Feature maps of layer {layer_info["index"]} ({layer_info["name"]}): '
     title += f'{feature_maps.shape[1]}x{feature_maps.shape[2]} px'
     plt.suptitle(title, fontsize=15)
@@ -88,7 +88,12 @@ def plot_feature_maps_of_a_layer(feature_maps,
         for _ in range(num_cols):
             plt.subplot(num_rows, num_cols, index)
             plt.title(f'map {index} of {feature_maps.shape[3]}')
-            plt.imshow(feature_maps[0, :, :, index-1], cmap='gray')
+            # cmap='gray' for normal b/w images
+            plt.imshow(feature_maps[0, :, :, index-1], cmap='inferno')
+            # Colorbar height: https://www.geeksforgeeks.org/set-matplotlib-colorbar-size-to-match-graph/
+            # Calculate (height_of_image / width_of_image)
+            img_ratio = feature_maps.shape[1]/feature_maps.shape[2]
+            plt.colorbar(fraction=0.047*img_ratio)
             index += 1
     plt.tight_layout()
     # Save plot
@@ -196,12 +201,22 @@ def create_metrics_plot(train_history, eval_history, plot_path, seed, show_plot=
     if(show_plot):
         plt.show()
 
-def plot_image(img_info):
+def plot_image(img_info, vis_path, save_plot=True, show_plot=True):
     plt.figure(figsize=(10, 10))
     title = f'Image: {img_info["name"]}, Class: {img_info["class"]}, Size: '
     title += f'{img_info["image"].shape[1]}x{img_info["image"].shape[2]} px'
     plt.title(title, fontsize=15)
     # Reduce dimensions of image tensor
-    plt.imshow(img_info["image"][-1, :, :, :], cmap='gray')
+    plt.imshow(img_info["image"][-1, :, :, :], cmap='inferno')
+    # Colorbar height: https://www.geeksforgeeks.org/set-matplotlib-colorbar-size-to-match-graph/
+    # Calculate (height_of_image / width_of_image)
+    img_ratio = img_info["image"].shape[1]/img_info["image"].shape[2]
+    plt.colorbar(fraction=0.047*img_ratio)
     plt.tight_layout()
-    plt.show()
+    # Save plot
+    filename = f'cnn_0_input_{img_info["class"]}_{img_info["name"]}'
+    if(save_plot):
+        plt.savefig(str(vis_path) + '/' + filename, bbox_inches='tight')
+    # Show plot
+    if(show_plot):
+        plt.show()
