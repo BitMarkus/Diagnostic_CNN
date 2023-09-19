@@ -7,10 +7,9 @@ from keras.models import Model
 import pathlib
 import numpy as np
 # Import own classes and functions
-# import cnn
-import cnn2
+from cnn import cnn_model
 import fcn
-import visual
+import vis
 
 # Experimental:
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -67,7 +66,7 @@ class_names = ds_train.class_names
 print("Classes: ", class_names, "\n")
 
 # VIZUALIZE DATA #
-# fcn.print_img_batch(BATCH_SIZE, ds_train, class_names)
+# vis.print_img_batch(BATCH_SIZE, ds_train, class_names)
 
 # DATA TUNING # 
 AUTOTUNE = tf.data.AUTOTUNE
@@ -77,7 +76,7 @@ ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test
 ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)
 
 # VIZUALIZE DATA #
-# fcn.print_img_batch(BATCH_SIZE, ds_train, class_names)
+# vis.print_img_batch(BATCH_SIZE, ds_train, class_names)
 
 # CALLBACKS #
 callback_list = fcn.callbacks(CHCKPT_PTH)
@@ -92,7 +91,7 @@ model.build(INPUT_SHAPE)
 print(model.model().summary())
 """
 # Create model from function
-model = cnn2.cnn_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)
+model = cnn_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)
 # Print summary of the model
 print(model.summary())
 
@@ -123,21 +122,15 @@ model.load_weights("weights/checkpoint-52-1.00.hdf5")
 
 # VISUALIZE #
 # Show first x filters of a cnn layer
-# visual.plot_filters_of_layers(model, 10)
-
+# vis.plot_filters_of_layers(model, 10)
 # Load image
-img = keras.utils.load_img(
-    DATA_PTH / "wt/WT_01_m191_ORG.png",
-    color_mode='grayscale', 
-    target_size=(IMG_HEIGHT, IMG_WIDTH)
-)
-# Convert PIL object to numpy array
-img = keras.utils.img_to_array(img)
-img = np.expand_dims(img, axis=0)
-img = img/255.0
-
+img_class = 'ko'
+img_name = 'KO_01_m283_ORG.png'
+img = fcn.load_img(DATA_PTH, img_class, img_name)
+img_info = {"image":img, "class":img_class, "name":img_name}
 # Plot feature maps
-visual.plot_feature_maps_of_layers(model, img, 5, 5)
+# vis.plot_image(img_info)
+# vis.plot_feature_maps_of_layers(model, VIS_PHT, img_info, 5, 5, save_plot=True, show_plot=False)
 
 # PLOT ACCURACY AND LOSS #
-# fcn.create_metrics_plot(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
+# vis.create_metrics_plot(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)

@@ -1,69 +1,9 @@
 import tensorflow as tf
-import math
+from tensorflow import keras
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
-
-# Prints first batch of images from the training dataset
-def print_img_batch(batch_size, ds, class_names):
-    # Get class names
-    # class_names = ds.class_names
-    # Calculate number of rows/columns
-    nr_row_col = math.ceil(math.sqrt(batch_size))
-    # print(f"cols/rows: {nr_row_col}\n")
-    plt.figure(figsize=(10, 10))
-    for images, labels in ds.take(1):
-        for i in range(batch_size):
-            plt.subplot(nr_row_col, nr_row_col, i + 1)
-            plt.imshow(images[i].numpy().astype("uint8"))
-            plt.title(class_names[labels[i]])
-            plt.axis("off")
-    plt.show()
-
-# Prints accuracy and loss after training
-def create_metrics_plot(train_history, eval_history, plot_path, seed, show_plot=True, save_plot=True):
-    # Accuracy
-    acc = train_history.history['accuracy']
-    val_acc = train_history.history['val_accuracy']
-    # Loss
-    loss = train_history.history['loss']
-    val_loss = train_history.history['val_loss']
-    # Learning rate
-    lr = train_history.history['lr']
-    # Number of epochs
-    epochs_range = range(1, len(acc) + 1)
-    # Draw plots
-    plt.figure(figsize=(15, 5))
-    # Accuracy plot:
-    plt.subplot(1, 3, 1)
-    plt.plot(epochs_range, acc, label='Training Accuracy', color='green')
-    plt.plot(epochs_range, val_acc, label='Validation Accuracy', color='red')
-    plt.legend(loc='lower right')
-    plt.title('Training and Validation Accuracy')
-    # Loss plot:
-    plt.subplot(1, 3, 2)
-    # Set the range of y-axis
-    plt.ylim(0, 5)
-    plt.plot(epochs_range, loss, label='Training Loss', color='green')
-    plt.plot(epochs_range, val_loss, label='Validation Loss', color='red')
-    plt.legend(loc='upper right')
-    plt.title('Training and Validation Loss')
-    # Learning rate plot:
-    plt.subplot(1, 3, 3)
-    # convert y-axis to Logarithmic scale
-    plt.yscale("log")
-    plt.plot(epochs_range, lr, label='Learning Rate', color='blue')
-    plt.legend(loc='upper right')
-    plt.title('Learning Rate')
-    # Reduce unnecessary whitespaces around the plots
-    # https://stackoverflow.com/questions/4042192/reduce-left-and-right-margins-in-matplotlib-plot
-    plt.tight_layout()
-    # Save plot
-    if(save_plot):
-        save_metrics_plot(eval_history, plot_path, seed)
-    # Show plot
-    if(show_plot):
-        plt.show()
+import numpy as np
 
 # Function to save the acc/loss plot
 def save_metrics_plot(eval_history, plot_path, seed):
@@ -219,5 +159,20 @@ def lr_scheduler(epoch):
     tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
     return learning_rate
 
+# Function loads a single image for prdictions
+# It also normalizes the image
+def load_img(pth, category, name):
+    # Load image
+    img = keras.utils.load_img(
+        pth / category / name,
+        color_mode='grayscale', 
+        target_size=None,
+    )
+    # Convert PIL object to numpy array
+    img = keras.utils.img_to_array(img)
+    img = np.expand_dims(img, axis=0)
+    # Normalize pixel values to 0-1
+    img = tf.cast(img, tf.float32)/255.0
+    return img
 
 
