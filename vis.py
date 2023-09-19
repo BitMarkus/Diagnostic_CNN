@@ -13,7 +13,7 @@ def num_cnn_layers(model):
     return count
 
 # https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
-# function plot_filters_of_a_layer for visualizing filters of a layer
+# Function plot_filters_of_a_layer for visualizing filters of a layer
 # works only with grayscale pictures!
 def plot_filters_of_layers(model, num_filters):
     # Get weights (and bias) as list
@@ -63,6 +63,7 @@ def get_cnn_layer_info(model):
             )
     return conv_layers_index
 
+# https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 # Function to plot a feature map of a single layer 
 def plot_feature_maps_of_a_layer(feature_maps, 
                                  vis_path, 
@@ -98,6 +99,7 @@ def plot_feature_maps_of_a_layer(feature_maps,
     if(show_plot):
         plt.show()
 
+# https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 # Function to plot feature maps of all cnn layers
 # Only the ones from the end of each cnn block will be shown
 def plot_feature_maps_of_layers(model, 

@@ -125,12 +125,12 @@ model.load_weights("weights/checkpoint-52-1.00.hdf5")
 # vis.plot_filters_of_layers(model, 10)
 # Load image
 img_class = 'ko'
-img_name = 'KO_01_m283_ORG.png'
+img_name = 'KO_01_m501_ORG.png'
 img = fcn.load_img(DATA_PTH, img_class, img_name)
 img_info = {"image":img, "class":img_class, "name":img_name}
 # Plot feature maps
-# vis.plot_image(img_info)
-# vis.plot_feature_maps_of_layers(model, VIS_PHT, img_info, 5, 5, save_plot=True, show_plot=False)
+vis.plot_image(img_info)
+vis.plot_feature_maps_of_layers(model, VIS_PHT, img_info, 5, 5, save_plot=True, show_plot=False)
 
 # PLOT ACCURACY AND LOSS #
 # vis.create_metrics_plot(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
