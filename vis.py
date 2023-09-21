@@ -147,9 +147,9 @@ def plot_feature_maps_of_multiple_layers(model,
         idx += 1
 
 # Prints first batch of images from the training dataset
-def print_img_batch(batch_size, ds, class_names):
+def plot_img_batch(batch_size, ds, vis_path, show_plot=False, save_plot=False):
     # Get class names
-    # class_names = ds.class_names
+    class_names = ds.class_names
     # Calculate number of rows/columns
     nr_row_col = math.ceil(math.sqrt(batch_size))
     # print(f"cols/rows: {nr_row_col}\n")
@@ -157,13 +157,20 @@ def print_img_batch(batch_size, ds, class_names):
     for images, labels in ds.take(1):
         for i in range(batch_size):
             plt.subplot(nr_row_col, nr_row_col, i + 1)
-            plt.imshow(images[i].numpy().astype("uint8"))
+            plt.imshow(images[i].numpy().astype("uint8"), cmap='inferno')
             plt.title(class_names[labels[i]])
             plt.axis("off")
-    plt.show()
+    plt.tight_layout()
+    # Save plot
+    filename = f'batch0_dataset'
+    if(save_plot):
+        plt.savefig(str(vis_path) + '/' + filename, bbox_inches='tight')
+    # Show plot
+    if(show_plot):
+        plt.show()
 
 # Prints accuracy and loss after training
-def create_metrics_plot(train_history, eval_history, plot_path, seed, show_plot=True, save_plot=True):
+def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=False, save_plot=False):
     # Accuracy
     acc = train_history.history['accuracy']
     val_acc = train_history.history['val_accuracy']
@@ -207,7 +214,7 @@ def create_metrics_plot(train_history, eval_history, plot_path, seed, show_plot=
     if(show_plot):
         plt.show()
 
-def plot_image(data_path, vis_path, img_class, img_name, save_plot=True, show_plot=True):
+def plot_image(data_path, vis_path, img_class, img_name, save_plot=False, show_plot=False):
     # load image
     img = load_img(data_path, img_class, img_name)
     # prepare plot

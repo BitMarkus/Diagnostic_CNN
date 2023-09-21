@@ -3,9 +3,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from tensorflow import keras
-from keras.models import Model
 import pathlib
-import numpy as np
 # Import own classes and functions
 from cnn import cnn_model
 import fcn
@@ -66,7 +64,7 @@ class_names = ds_train.class_names
 print("Classes: ", class_names, "\n")
 
 # VIZUALIZE DATA #
-# vis.print_img_batch(BATCH_SIZE, ds_train, class_names)
+# vis.plot_img_batch(BATCH_SIZE, ds_train, VIS_PHT, show_plot=False, save_plot=False)
 
 # DATA TUNING # 
 AUTOTUNE = tf.data.AUTOTUNE
@@ -74,9 +72,6 @@ ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test
 
 # DATA AUGMENTATION #
 ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)
-
-# VIZUALIZE DATA #
-# vis.print_img_batch(BATCH_SIZE, ds_train, class_names)
 
 # CALLBACKS #
 callback_list = fcn.callbacks(CHCKPT_PTH)
@@ -125,8 +120,8 @@ model.load_weights("weights/checkpoint-52-1.00.hdf5")
 # vis.plot_filters_of_layers(model, 10)
 
 # Load image
-subfolder = 'wt'
-img_name = 'WT_01_m558_ORG.png'
+subfolder = 'ko'
+img_name = 'KO_01_m047_ORG.png'
 # Plot feature maps
 vis.plot_image(DATA_PTH, VIS_PHT, subfolder, img_name, save_plot=False, show_plot=True)
 # vis.plot_feature_maps_of_multiple_layers(model, DATA_PTH, VIS_PHT, subfolder, img_name, num_rows=3, num_cols=3, save_plot=False, show_plot=True)
@@ -135,4 +130,4 @@ vis.plot_image(DATA_PTH, VIS_PHT, subfolder, img_name, save_plot=False, show_plo
 fcn.predict_single_img(model, DATA_PTH, subfolder, img_name, class_names)
 
 # PLOT ACCURACY AND LOSS #
-# vis.create_metrics_plot(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
+# vis.plot_metric(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
