@@ -97,7 +97,7 @@ def tune_img(ds_train, ds_validation, ds_test, autotune):
     return ds_train, ds_validation, ds_test
 
 # Function for callbacks
-def callbacks(checkpoint_path):
+def get_callbacks(checkpoint_path):
     callbacks = []
     
     # Save best weights as checkpoint (highest validation accuracy):

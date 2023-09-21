@@ -75,7 +75,7 @@ ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test
 ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)
 
 # CALLBACKS #
-callback_list = fcn.callbacks(CHCKPT_PTH)
+callback_list = fcn.get_callbacks(CHCKPT_PTH)
 
 # CREATE MODEL #
 """

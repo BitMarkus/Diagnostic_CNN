@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from tensorflow import keras
 import math
-# from matplotlib import pylab
 from fcn import save_metrics_plot, load_img, get_cnn_layer_info
 
 # https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
@@ -43,8 +42,8 @@ def plot_filters_of_layers(model, num_filters):
     plt.tight_layout()
     plt.show()
 
-# https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 # Function to plot a feature map of a single layer 
+# https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 def plot_feature_maps_of_single_layer(feature_maps, 
                                       vis_path, 
                                       img_name, 
@@ -53,16 +52,13 @@ def plot_feature_maps_of_single_layer(feature_maps,
                                       num_rows, 
                                       num_cols, 
                                       save_plot=False, 
-                                      show_plot=False):
+                                      show_plot=True):
     # Set title
     plt.figure(figsize=(18, 13))
     title = f'Image: {img_name}, Class: {img_class}\n'
     title += f'Feature maps of layer {layer_info["index"]} ({layer_info["name"]}): '
     title += f'{feature_maps.shape[1]}x{feature_maps.shape[2]} px'
     plt.suptitle(title, fontsize=15)
-    # Set windows title
-    # fig = pylab.gcf()
-    # fig.canvas.manager.set_window_title(title)
     index = 1
     # Only num_rows x num_cols feature maps will be displayed
     for _ in range(num_rows):
@@ -85,9 +81,8 @@ def plot_feature_maps_of_single_layer(feature_maps,
     if(show_plot):
         plt.show()
 
-# https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 # Function to plot feature maps of all cnn layers
-# Only the ones from the end of each cnn block will be shown
+# https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 def plot_feature_maps_of_multiple_layers(model,
                                          data_path,
                                          vis_path, 
@@ -96,7 +91,7 @@ def plot_feature_maps_of_multiple_layers(model,
                                          num_rows=3, 
                                          num_cols=3, 
                                          save_plot=False, 
-                                         show_plot=False):
+                                         show_plot=True):
     # close all old plots
     plt.close('all')
     # load image
@@ -129,7 +124,7 @@ def plot_feature_maps_of_multiple_layers(model,
         idx += 1
 
 # Prints first batch of images from the training dataset
-def plot_img_batch(batch_size, ds, vis_path, show_plot=False, save_plot=False):
+def plot_img_batch(batch_size, ds, vis_path, show_plot=True, save_plot=False):
     # close all old plots
     plt.close('all')
     # Get class names
@@ -154,7 +149,7 @@ def plot_img_batch(batch_size, ds, vis_path, show_plot=False, save_plot=False):
         plt.show()
 
 # Prints accuracy and loss after training
-def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=False, save_plot=False):
+def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=True, save_plot=False):
     # close all old plots
     plt.close('all')
     # Accuracy
@@ -200,7 +195,7 @@ def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=False, 
     if(show_plot):
         plt.show()
 
-def plot_image(data_path, vis_path, img_class, img_name, save_plot=False, show_plot=False):
+def plot_image(data_path, vis_path, img_class, img_name, save_plot=True, show_plot=False):
     # close all old plots
     plt.close('all')
     # load image
