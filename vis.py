@@ -2,20 +2,14 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 import math
 # from matplotlib import pylab
-from fcn import save_metrics_plot, load_img
-
-# Function counts the number of cnn layers in a model
-def num_cnn_layers(model):
-    count = 0
-    for _, layer in enumerate(model.layers):
-        if 'cnn' in layer.name: 
-            count += 1
-    return count
+from fcn import save_metrics_plot, load_img, get_cnn_layer_info
 
 # https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 # Function plot_filters_of_a_layer for visualizing filters of a layer
 # works only with grayscale pictures!
 def plot_filters_of_layers(model, num_filters):
+    # close all old plots
+    plt.close('all')
     # Get weights (and bias) as list
     weights_layers = []
     for _, layer in enumerate(model.layers):
@@ -48,20 +42,6 @@ def plot_filters_of_layers(model, num_filters):
     # show the figure
     plt.tight_layout()
     plt.show()
-
-# Function returns a dict with all indices and layer names
-#  of all cnn layers in the model as list
-def get_cnn_layer_info(model):
-    conv_layers_index = []
-    for idx, layer in enumerate(model.layers):
-        if 'cnn' in layer.name:
-            conv_layers_index.append(
-                {
-                    "index": idx,
-                    "name": layer.name,
-                }
-            )
-    return conv_layers_index
 
 # https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 # Function to plot a feature map of a single layer 
@@ -117,6 +97,8 @@ def plot_feature_maps_of_multiple_layers(model,
                                          num_cols=3, 
                                          save_plot=False, 
                                          show_plot=False):
+    # close all old plots
+    plt.close('all')
     # load image
     img = load_img(data_path, img_class, img_name)
     # Get indices of ALL convolution layers
@@ -148,6 +130,8 @@ def plot_feature_maps_of_multiple_layers(model,
 
 # Prints first batch of images from the training dataset
 def plot_img_batch(batch_size, ds, vis_path, show_plot=False, save_plot=False):
+    # close all old plots
+    plt.close('all')
     # Get class names
     class_names = ds.class_names
     # Calculate number of rows/columns
@@ -171,6 +155,8 @@ def plot_img_batch(batch_size, ds, vis_path, show_plot=False, save_plot=False):
 
 # Prints accuracy and loss after training
 def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=False, save_plot=False):
+    # close all old plots
+    plt.close('all')
     # Accuracy
     acc = train_history.history['accuracy']
     val_acc = train_history.history['val_accuracy']
@@ -215,6 +201,8 @@ def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=False, 
         plt.show()
 
 def plot_image(data_path, vis_path, img_class, img_name, save_plot=False, show_plot=False):
+    # close all old plots
+    plt.close('all')
     # load image
     img = load_img(data_path, img_class, img_name)
     # prepare plot

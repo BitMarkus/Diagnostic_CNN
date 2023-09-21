@@ -186,6 +186,28 @@ def predict_single_img(model, data_path, subfolder, img_name, class_names):
     class_index = np.argmax(probabilities, axis=-1)
     pred_class_name = class_names[class_index[0]]
     pred_probability = probabilities[0][class_index[0]]*100
-    print(f"Image {img_name} belongs to class \"{pred_class_name}\" ({pred_probability:.2f}%)")    
+    print(f"Image {img_name} belongs to class \"{pred_class_name}\" ({pred_probability:.2f}%)")   
+
+# Function counts the number of cnn layers in a model
+def num_cnn_layers(model):
+    count = 0
+    for _, layer in enumerate(model.layers):
+        if 'cnn' in layer.name: 
+            count += 1
+    return count
+
+# Function returns a dict with all indices and layer names
+#  of all cnn layers in the model as list
+def get_cnn_layer_info(model):
+    conv_layers_index = []
+    for idx, layer in enumerate(model.layers):
+        if 'cnn' in layer.name:
+            conv_layers_index.append(
+                {
+                    "index": idx,
+                    "name": layer.name,
+                }
+            )
+    return conv_layers_index
 
 

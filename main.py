@@ -4,6 +4,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from tensorflow import keras
 import pathlib
+import matplotlib.pyplot as plt
 # Import own classes and functions
 from cnn import cnn_model
 import fcn
@@ -64,7 +65,7 @@ class_names = ds_train.class_names
 print("Classes: ", class_names, "\n")
 
 # VIZUALIZE DATA #
-# vis.plot_img_batch(BATCH_SIZE, ds_train, VIS_PHT, show_plot=False, save_plot=False)
+vis.plot_img_batch(BATCH_SIZE, ds_train, VIS_PHT, show_plot=True, save_plot=False)
 
 # DATA TUNING # 
 AUTOTUNE = tf.data.AUTOTUNE
@@ -117,14 +118,14 @@ model.load_weights("weights/checkpoint-52-1.00.hdf5")
 
 # VISUALIZE #
 # Show first x filters of a cnn layer
-# vis.plot_filters_of_layers(model, 10)
+vis.plot_filters_of_layers(model, 10)
 
 # Load image
 subfolder = 'ko'
 img_name = 'KO_01_m047_ORG.png'
 # Plot feature maps
 vis.plot_image(DATA_PTH, VIS_PHT, subfolder, img_name, save_plot=False, show_plot=True)
-# vis.plot_feature_maps_of_multiple_layers(model, DATA_PTH, VIS_PHT, subfolder, img_name, num_rows=3, num_cols=3, save_plot=False, show_plot=True)
+vis.plot_feature_maps_of_multiple_layers(model, DATA_PTH, VIS_PHT, subfolder, img_name, num_rows=3, num_cols=3, save_plot=False, show_plot=True)
 
 # PREDICT SINGLE IMAGE #
 fcn.predict_single_img(model, DATA_PTH, subfolder, img_name, class_names)
