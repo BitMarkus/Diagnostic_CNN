@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 import math
 # from matplotlib import pylab
-from fcn import save_metrics_plot
+from fcn import save_metrics_plot, load_img
 
 # Function counts the number of cnn layers in a model
 def num_cnn_layers(model):
@@ -65,17 +65,18 @@ def get_cnn_layer_info(model):
 
 # https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 # Function to plot a feature map of a single layer 
-def plot_feature_maps_of_a_layer(feature_maps, 
-                                 vis_path, 
-                                 img_info, 
-                                 layer_info, 
-                                 num_rows, 
-                                 num_cols, 
-                                 save_plot=False, 
-                                 show_plot=False):
+def plot_feature_maps_of_single_layer(feature_maps, 
+                                      vis_path, 
+                                      img_name, 
+                                      img_class,
+                                      layer_info, 
+                                      num_rows, 
+                                      num_cols, 
+                                      save_plot=False, 
+                                      show_plot=False):
     # Set title
     plt.figure(figsize=(18, 13))
-    title = f'Image: {img_info["name"]}, Class: {img_info["class"]}\n'
+    title = f'Image: {img_name}, Class: {img_class}\n'
     title += f'Feature maps of layer {layer_info["index"]} ({layer_info["name"]}): '
     title += f'{feature_maps.shape[1]}x{feature_maps.shape[2]} px'
     plt.suptitle(title, fontsize=15)
@@ -97,7 +98,7 @@ def plot_feature_maps_of_a_layer(feature_maps,
             index += 1
     plt.tight_layout()
     # Save plot
-    filename = f'{layer_info["name"]}_{img_info["class"]}_{img_info["name"]}'
+    filename = f'{layer_info["name"]}_{img_class}_{img_name}'
     if(save_plot):
         plt.savefig(str(vis_path) + '/' + filename, bbox_inches='tight')
     # Show plot
@@ -107,13 +108,17 @@ def plot_feature_maps_of_a_layer(feature_maps,
 # https://insights.willogy.io/tensorflow-insights-part-3-visualizations/
 # Function to plot feature maps of all cnn layers
 # Only the ones from the end of each cnn block will be shown
-def plot_feature_maps_of_layers(model, 
-                                vis_path, 
-                                img_info, 
-                                num_rows, 
-                                num_cols, 
-                                save_plot=0, 
-                                show_plot=0):
+def plot_feature_maps_of_multiple_layers(model,
+                                         data_path,
+                                         vis_path, 
+                                         img_class,
+                                         img_name,
+                                         num_rows=3, 
+                                         num_cols=3, 
+                                         save_plot=False, 
+                                         show_plot=False):
+    # load image
+    img = load_img(data_path, img_class, img_name)
     # Get indices of ALL convolution layers
     conv_layers = get_cnn_layer_info(model)
     # Get list with desired output layers
@@ -123,21 +128,22 @@ def plot_feature_maps_of_layers(model,
     # Generate temporary model using outputs of cnn lyers
     model_tmp = keras.Model(inputs=model.inputs, outputs=list_of_outputs)
     # Send image through network
-    feature_maps = model_tmp.predict(img_info["image"], verbose=0) 
+    feature_maps = model_tmp.predict(img, verbose=0) 
     # Plot feature maps
     idx = 0
     print("\nPrint feature maps:")
     for feature_map in feature_maps:
         print(f'>> Layer {conv_layers[idx]["index"]} ({conv_layers[idx]["name"]}) shape:', feature_map.shape)
         # Plot all maps
-        plot_feature_maps_of_a_layer(feature_map, 
-                                     vis_path, 
-                                     img_info, 
-                                     conv_layers[idx], 
-                                     num_rows, 
-                                     num_cols,
-                                     save_plot=save_plot, 
-                                     show_plot=show_plot)
+        plot_feature_maps_of_single_layer(feature_map, 
+                                          vis_path, 
+                                          img_name, 
+                                          img_class,
+                                          conv_layers[idx], 
+                                          num_rows, 
+                                          num_cols,
+                                          save_plot=save_plot, 
+                                          show_plot=show_plot)
         idx += 1
 
 # Prints first batch of images from the training dataset
@@ -201,20 +207,23 @@ def create_metrics_plot(train_history, eval_history, plot_path, seed, show_plot=
     if(show_plot):
         plt.show()
 
-def plot_image(img_info, vis_path, save_plot=True, show_plot=True):
+def plot_image(data_path, vis_path, img_class, img_name, save_plot=True, show_plot=True):
+    # load image
+    img = load_img(data_path, img_class, img_name)
+    # prepare plot
     plt.figure(figsize=(10, 10))
-    title = f'Image: {img_info["name"]}, Class: {img_info["class"]}, Size: '
-    title += f'{img_info["image"].shape[1]}x{img_info["image"].shape[2]} px'
+    title = f'Image: {img_name}, Class: {img_class}, Size: '
+    title += f'{img.shape[1]}x{img.shape[2]} px'
     plt.title(title, fontsize=15)
     # Reduce dimensions of image tensor
-    plt.imshow(img_info["image"][-1, :, :, :], cmap='inferno')
+    plt.imshow(img[-1, :, :, :], cmap='inferno')
     # Colorbar height: https://www.geeksforgeeks.org/set-matplotlib-colorbar-size-to-match-graph/
     # Calculate (height_of_image / width_of_image)
-    img_ratio = img_info["image"].shape[1]/img_info["image"].shape[2]
+    img_ratio = img.shape[1]/img.shape[2]
     plt.colorbar(fraction=0.047*img_ratio)
     plt.tight_layout()
     # Save plot
-    filename = f'cnn_0_input_{img_info["class"]}_{img_info["name"]}'
+    filename = f'cnn_0_input_{img_class}_{img_name}'
     if(save_plot):
         plt.savefig(str(vis_path) + '/' + filename, bbox_inches='tight')
     # Show plot

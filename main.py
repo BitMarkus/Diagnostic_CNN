@@ -123,14 +123,16 @@ model.load_weights("weights/checkpoint-52-1.00.hdf5")
 # VISUALIZE #
 # Show first x filters of a cnn layer
 # vis.plot_filters_of_layers(model, 10)
+
 # Load image
-img_class = 'wt'
-img_name = 'WT_01_m277_ORG.png'
-img = fcn.load_img(DATA_PTH, img_class, img_name)
-img_info = {"image":img, "class":img_class, "name":img_name}
+subfolder = 'wt'
+img_name = 'WT_01_m558_ORG.png'
 # Plot feature maps
-vis.plot_image(img_info, VIS_PHT, save_plot=True, show_plot=True)
-vis.plot_feature_maps_of_layers(model, VIS_PHT, img_info, 5, 5, save_plot=True, show_plot=False)
+vis.plot_image(DATA_PTH, VIS_PHT, subfolder, img_name, save_plot=False, show_plot=True)
+# vis.plot_feature_maps_of_multiple_layers(model, DATA_PTH, VIS_PHT, subfolder, img_name, num_rows=3, num_cols=3, save_plot=False, show_plot=True)
+
+# PREDICT SINGLE IMAGE #
+fcn.predict_single_img(model, DATA_PTH, subfolder, img_name, class_names)
 
 # PLOT ACCURACY AND LOSS #
 # vis.create_metrics_plot(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)

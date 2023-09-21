@@ -175,4 +175,17 @@ def load_img(pth, category, name):
     img = tf.cast(img, tf.float32)/255.0
     return img
 
+# Function predicts a single image and prints output
+def predict_single_img(model, data_path, subfolder, img_name, class_names):
+    # load image
+    img = load_img(data_path, subfolder, img_name)
+    # Predict probabilities: return of a 2D numpy array (why 2D?)
+    print(f"\nPredict class of image \"{img_name}\":")
+    probabilities = model.predict(img, verbose=1)
+    # Connect probability with the respective class label
+    class_index = np.argmax(probabilities, axis=-1)
+    pred_class_name = class_names[class_index[0]]
+    pred_probability = probabilities[0][class_index[0]]*100
+    print(f"Image {img_name} belongs to class \"{pred_class_name}\" ({pred_probability:.2f}%)")    
+
 
