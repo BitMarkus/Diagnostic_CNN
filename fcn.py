@@ -210,4 +210,13 @@ def get_cnn_layer_info(model):
             )
     return conv_layers_index
 
+# Function to retain program execution while a plot is shown
+# Can be used instead of plt.show()
+# https://stackoverflow.com/questions/65951965/when-i-plot-something-in-python-the-programs-execution-stops-until-i-close-the-p
+# It is important that the last line of the main code is plt.show()
+# or the plot will close when the program execution is finished
+def show_plot_exec():
+    plt.show(block=False)
+    plt.pause(0.001)    
+
 
