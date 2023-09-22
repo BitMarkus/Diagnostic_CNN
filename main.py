@@ -122,10 +122,10 @@ model.load_weights("weights/checkpoint-52-1.00.hdf5")
 
 # Load image
 subfolder = 'wt'
-img_name = 'WT_01_m003_ORG.png'
+img_name = 'WT_01_m555_ORG.png'
 # Plot feature maps
-vis.plot_image(DATA_PTH, VIS_PHT, subfolder, img_name, save_plot=False, show_plot=True)
-# vis.plot_feature_maps_of_multiple_layers(model, DATA_PTH, VIS_PHT, subfolder, img_name, num_rows=3, num_cols=3, save_plot=False, show_plot=True)
+vis.plot_image(DATA_PTH, VIS_PHT, subfolder, img_name, save_plot=True, show_plot=True)
+vis.plot_feature_maps_of_multiple_layers(model, DATA_PTH, VIS_PHT, subfolder, img_name, num_rows=3, num_cols=3, save_plot=True, show_plot=False)
 
 # PREDICT SINGLE IMAGE #
 fcn.predict_single_img(model, DATA_PTH, subfolder, img_name, class_names)
