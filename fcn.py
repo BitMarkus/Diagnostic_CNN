@@ -180,7 +180,7 @@ def predict_single_img(model, data_path, subfolder, img_name, class_names):
     # load image
     img = load_img(data_path, subfolder, img_name)
     # Predict probabilities: return of a 2D numpy array (why 2D?)
-    print(f"\nPredict class of image \"{img_name}\":")
+    print(f"Predict class of image \"{img_name}\":")
     probabilities = model.predict(img, verbose=1)
     # Connect probability with the respective class label
     class_index = np.argmax(probabilities, axis=-1)
@@ -217,6 +217,19 @@ def get_cnn_layer_info(model):
 # or the plot will close when the program execution is finished
 def show_plot_exec():
     plt.show(block=False)
-    plt.pause(0.001)    
+    plt.pause(0.001)  
+
+# Function returns a list with all class names
+# = all subfolders in the data folder
+# https://www.techiedelight.com/list-all-subdirectories-in-directory-python/
+def get_class_names(data_dir):
+    class_list = []
+    for file in os.listdir(data_dir):
+        d = os.path.join(data_dir, file)
+        # Only folders, no files
+        if os.path.isdir(d): 
+            class_list.append(file)
+    return class_list
+
 
 

@@ -58,6 +58,9 @@ LEARNING_RATE = 0.00001     # Is also determined in the learning rate scheduler
 file_writer = tf.summary.create_file_writer(str(LOG_LR_PTH))
 file_writer.set_as_default()
 
+# Get list with callbacks
+callback_list = fcn.get_callbacks(CHCKPT_PTH)
+
 #############
 # Main Menu #
 #############
@@ -68,33 +71,97 @@ while(True):
     print("3) Load Training Data")
     print("4) Train Network")
     print("5) Load Model")
-    print("6) Visualize Model")
+    print("6) Predict Single Image")
     print("7) Exit Program")
     menu1 = int(menu.input_int("Please choose: "))
 
     ##### Create CNN Network #####  
     if(menu1 == 1):       
         print("\n:NEW CNN NETWORK:")  
+        # Check if a model is already existing
+        if('model' in globals()):
+            print("A network already exists!")
+        else:
+            print("Creating new network...")
+            model = cnn_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)
+            print("New network finished.")
 
     ##### Show Network Summary #####  
     elif(menu1 == 2):       
-        print("\n:SHOW NETWORK SUMMARY:")         
+        print("\n:SHOW NETWORK SUMMARY:")   
+        if('model' in globals()):
+            print(model.summary())     
+        else:
+            print("No network generated yet!") 
         
     ##### Load Training Data #####  
     elif(menu1 == 3):       
-        print("\n:LOAD TRAINING DATA:")             
+        print("\n:LOAD TRAINING DATA:")  
+        # Get training, validation and test data
+        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED, CATEGORIES)
+        # Get class names
+        class_names = ds_train.class_names
+        print("Classes: ", class_names)    
+        # Data tuning
+        AUTOTUNE = tf.data.AUTOTUNE
+        ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test, AUTOTUNE)
+        # Data augmentation
+        ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)               
         
     #####Train Network #####            
     elif(menu1 == 4):
         print("\n:TRAIN NETWORK:") 
+        # https://stackoverflow.com/questions/21980874/how-do-i-check-if-both-of-two-variables-exists-in-python
+        if('model' not in globals()):
+            print('No CNN generated yet!')
+        elif('ds_train' not in globals()):
+            print('No training data loaded yet!')
+        else:
+            # Compile model
+            model.compile(
+                # from_logits=False: Softmax on output layer
+                loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                optimizer=keras.optimizers.Adam(LEARNING_RATE),
+                metrics=["accuracy"],
+            )
+            # Train model
+            train_history = model.fit(
+                ds_train, 
+                validation_data=ds_validation,
+                epochs=NUM_EPOCHS,
+                callbacks=callback_list, 
+                verbose=1,
+            )  
+            print("Training of network finished.\n")  
+            # Evaluate model
+            print("Evaluate model with test dataset:")
+            eval_history = model.evaluate(ds_test, verbose=1) 
+            vis.plot_metric(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)       
         
     ##### Load Model #####
     elif(menu1 == 5):
+        # Choose checkpoint
+        chkpt = "checkpoint-52-1.00.hdf5"
+        # Load checkpoint weights
         print("\n:LOAD MODEL:") 
+        if('model' not in globals()):
+            print('No network generated yet!')
+        else:
+            model.load_weights(f"weights/{chkpt}")
+            print("Import of weights finished.")
      
-    ##### Visualize Model #####
+    ##### Predict #####
     elif(menu1 == 6):
-        print("\n:VIZUALIZE MODEL:") 
+        # Load image
+        subfolder = 'wt'
+        img_name = 'WT_01_m555_ORG.png'
+        # Make prediction
+        print("\n:PREDICT SINGLE IMAGE:") 
+        if('model' not in globals()):
+            print('No network generated yet!')
+        else:
+            class_names = fcn.get_class_names(DATA_PTH)
+            fcn.predict_single_img(model, DATA_PTH, subfolder, img_name, class_names)
 
     ##### Exit Program #####
     elif(menu1 == 7):
@@ -105,7 +172,9 @@ while(True):
     else:
         print("Not a valid option!")      
 
-
+# Last line in main program to keep plots open after program execution is finished
+# see function plot_show() im fcn.py
+plt.show()
 
 
 """
@@ -130,7 +199,6 @@ ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)
 callback_list = fcn.get_callbacks(CHCKPT_PTH)
 
 # CREATE MODEL #
-
 # Create model using subclassing
 model = cnn.CNNModel(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)
 # Build model and print summary
@@ -184,8 +252,4 @@ fcn.predict_single_img(model, DATA_PTH, subfolder, img_name, class_names)
 
 # PLOT ACCURACY AND LOSS #
 # vis.plot_metric(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)
-
-# Last line in main program to keep plots open after program execution is finished
-# see function plot_show() im fcn.py
-plt.show()
 """
