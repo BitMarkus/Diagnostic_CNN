@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from cnn import cnn_model
 import fcn
 import vis
+import menu
 
 # Experimental:
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -57,6 +58,57 @@ LEARNING_RATE = 0.00001     # Is also determined in the learning rate scheduler
 file_writer = tf.summary.create_file_writer(str(LOG_LR_PTH))
 file_writer.set_as_default()
 
+#############
+# Main Menu #
+#############
+while(True):  
+    print("\n:MAIN MENU:")
+    print("1) Create CNN Network")
+    print("2) Show Network Summary")
+    print("3) Load Training Data")
+    print("4) Train Network")
+    print("5) Load Model")
+    print("6) Visualize Model")
+    print("7) Exit Program")
+    menu1 = int(menu.input_int("Please choose: "))
+
+    ##### Create CNN Network #####  
+    if(menu1 == 1):       
+        print("\n:NEW CNN NETWORK:")  
+
+    ##### Show Network Summary #####  
+    elif(menu1 == 2):       
+        print("\n:SHOW NETWORK SUMMARY:")         
+        
+    ##### Load Training Data #####  
+    elif(menu1 == 3):       
+        print("\n:LOAD TRAINING DATA:")             
+        
+    #####Train Network #####            
+    elif(menu1 == 4):
+        print("\n:TRAIN NETWORK:") 
+        
+    ##### Load Model #####
+    elif(menu1 == 5):
+        print("\n:LOAD MODEL:") 
+     
+    ##### Visualize Model #####
+    elif(menu1 == 6):
+        print("\n:VIZUALIZE MODEL:") 
+
+    ##### Exit Program #####
+    elif(menu1 == 7):
+        print("\nExit program...")
+        break 
+    
+    ##### Wrong Input #####  
+    else:
+        print("Not a valid option!")      
+
+
+
+
+"""
 # GET TRAINING, VALIDATION, AND TEST DATA #
 ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED, CATEGORIES)
 
@@ -78,14 +130,14 @@ ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)
 callback_list = fcn.get_callbacks(CHCKPT_PTH)
 
 # CREATE MODEL #
-"""
+
 # Create model using subclassing
 model = cnn.CNNModel(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)
 # Build model and print summary
 model.build(INPUT_SHAPE)
 # A normal summary call does not display output shapes (only 'multiple'):
 print(model.model().summary())
-"""
+
 # Create model from function
 model = cnn_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)
 # Print summary of the model
@@ -98,7 +150,7 @@ model.compile(
     optimizer=keras.optimizers.Adam(LEARNING_RATE),
     metrics=["accuracy"],
 )
-"""
+
 # TRAIN MODEL #
 print("Train model:")
 train_history = model.fit(
@@ -108,7 +160,7 @@ train_history = model.fit(
     callbacks=callback_list, 
     verbose=1,
 )
-"""
+
 # LOAD MODEL WEIGHTS #
 model.load_weights("weights/checkpoint-52-1.00.hdf5")
 
@@ -136,3 +188,4 @@ fcn.predict_single_img(model, DATA_PTH, subfolder, img_name, class_names)
 # Last line in main program to keep plots open after program execution is finished
 # see function plot_show() im fcn.py
 plt.show()
+"""
