@@ -17,7 +17,8 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 print("TensorFlow version: ", tf.__version__, "\n")
 
 # PROGRAM PARAMETERS #
-DATA_PTH = pathlib.Path('img_550x442_300/')
+# DATA_PTH = pathlib.Path('img_550x442_300/')
+DATA_PTH = pathlib.Path('ds2/')
 CATEGORIES = ['wt', 'ko']
 # DATA_PTH = pathlib.Path('wt_test/')
 # CATEGORIES = ['wt1', 'wt2']
@@ -44,11 +45,11 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 123                  # 123
+SEED = 409                  # 123
 BATCH_SIZE = 32             # 32
 VAL_SPLIT = 0.3             # 0.3
 NUM_CLASSES = 2             # 2
-NUM_EPOCHS = 100            # 100
+NUM_EPOCHS = 80            # 100
 L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
 LEARNING_RATE = 0.00001     # Is also determined in the learning rate scheduler
@@ -110,7 +111,7 @@ while(True):
         
     #####Train Network #####            
     elif(menu1 == 4):
-        print("\n:TRAIN NETWORK:") 
+        print("\n:TRAIN NETWORK:", end='') 
         # https://stackoverflow.com/questions/21980874/how-do-i-check-if-both-of-two-variables-exists-in-python
         if('model' not in globals()):
             print('No CNN generated yet!')
@@ -136,7 +137,7 @@ while(True):
             # Evaluate model
             print("Evaluate model with test dataset:")
             eval_history = model.evaluate(ds_test, verbose=1) 
-            vis.plot_metric(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)       
+            vis.plot_metrics(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)       
         
     ##### Load Model #####
     elif(menu1 == 5):
