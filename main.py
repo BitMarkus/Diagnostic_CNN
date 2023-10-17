@@ -11,16 +11,17 @@ import fcn
 import vis
 import menu
 
-# Experimental:
+# Optimize memory and show tensorflow version
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
-print("TensorFlow version: ", tf.__version__, "\n")
+print("TensorFlow version: ", tf.__version__, "")
 
 # PROGRAM PARAMETERS #
-DATA_PTH = pathlib.Path('dataset/')
 CATEGORIES = ['wt', 'ko']
+# Path to dataset
+DATA_PTH = pathlib.Path('dataset/')
 # Path for saved weights
-CHCKPT_PTH = pathlib.Path("weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5")
+WGHT_PTH = pathlib.Path("weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5")
 # Path for tensorboard logs
 LOG_PTH = pathlib.Path("logs/")
 # Path for logging learning rate
@@ -28,7 +29,7 @@ LOG_LR_PTH = LOG_PTH / "scalars/learning_rate/"
 # Path auto save the plots at the end of the training
 PLOT_PTH = pathlib.Path("plots/" + '_'.join(CATEGORIES) + "/") 
 # Path for visualizations
-VIS_PHT = pathlib.Path("visualizations/")
+VIS_PTH = pathlib.Path("vis/")
 # Path for prediction images
 PRED_PTH = pathlib.Path("predictions/")
 
@@ -40,7 +41,7 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 222                  # 123
+SEED = 333                  # 123
 BATCH_SIZE = 32             # 32
 VAL_SPLIT = 0.3             # 0.3
 NUM_CLASSES = 2             # 2
@@ -55,7 +56,7 @@ file_writer = tf.summary.create_file_writer(str(LOG_LR_PTH))
 file_writer.set_as_default()
 
 # Get list with callbacks
-callback_list = fcn.get_callbacks(CHCKPT_PTH)
+callback_list = fcn.get_callbacks(WGHT_PTH)
 
 #############
 # Main Menu #
@@ -138,7 +139,7 @@ while(True):
     ##### Load Model #####
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "xxx.hdf5"
+        chkpt = "checkpoint-67-0.99_ds1.hdf5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):

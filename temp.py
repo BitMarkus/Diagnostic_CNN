@@ -7,7 +7,7 @@ class_names = ds_train.class_names
 print("Classes: ", class_names, "\n")
 
 # VIZUALIZE DATA #
-# vis.plot_img_batch(BATCH_SIZE, ds_train, VIS_PHT, show_plot=True, save_plot=False)
+# vis.plot_img_batch(BATCH_SIZE, ds_train, VIS_PTH, show_plot=True, save_plot=False)
 
 # DATA TUNING # 
 AUTOTUNE = tf.data.AUTOTUNE
@@ -17,7 +17,7 @@ ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test
 ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)
 
 # CALLBACKS #
-callback_list = fcn.get_callbacks(CHCKPT_PTH)
+callback_list = fcn.get_callbacks(WGHT_PTH)
 
 # CREATE MODEL #
 # Create model using subclassing
@@ -65,8 +65,8 @@ model.load_weights("weights/checkpoint-52-1.00.hdf5")
 subfolder = 'wt'
 img_name = 'WT_01_m555_ORG.png'
 # Plot feature maps
-vis.plot_image(DATA_PTH, VIS_PHT, subfolder, img_name, save_plot=True, show_plot=True)
-vis.plot_feature_maps_of_multiple_layers(model, DATA_PTH, VIS_PHT, subfolder, img_name, num_rows=3, num_cols=3, save_plot=True, show_plot=False)
+vis.plot_image(DATA_PTH, VIS_PTH, subfolder, img_name, save_plot=True, show_plot=True)
+vis.plot_feature_maps_of_multiple_layers(model, DATA_PTH, VIS_PTH, subfolder, img_name, num_rows=3, num_cols=3, save_plot=True, show_plot=False)
 
 # PREDICT SINGLE IMAGE #
 fcn.predict_single_img(model, DATA_PTH, subfolder, img_name, class_names)
