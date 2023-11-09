@@ -11,9 +11,14 @@ import fcn
 import vis
 import menu
 
-# Optimize memory and show tensorflow version
-physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
+# Optimize memory
+gpus = tf.config.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
+# List GPUs
+for gpu in gpus:
+    print(gpu)
+# Show tensorflow version
 print("TensorFlow version: ", tf.__version__, "")
 
 # PROGRAM PARAMETERS #
@@ -41,11 +46,11 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 442                  # 123
+SEED = 377                  # 123
 BATCH_SIZE = 32             # 32
-VAL_SPLIT = 0.3             # 0.3
+VAL_SPLIT = 0.2             # 0.3
 NUM_CLASSES = 2             # 2
-NUM_EPOCHS = 80             # 100
+NUM_EPOCHS = 150            # 100
 L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
 LEARNING_RATE = 0.00001     # Is also determined in the learning rate scheduler
