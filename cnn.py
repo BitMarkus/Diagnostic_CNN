@@ -10,7 +10,7 @@ def cnn_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
     ###############
     # CNN LAYER 1.1:
     x = layers.Conv2D(
-        62, 
+        64, 
         3, 
         padding='same',
         name='cnn_1_1'
@@ -19,7 +19,7 @@ def cnn_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
     x = keras.activations.relu(x)
     # CNN LAYER 1.2:
     x = layers.Conv2D(
-        62, 
+        64, 
         3, 
         padding='same',
         name='cnn_1_2'

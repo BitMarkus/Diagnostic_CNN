@@ -3,6 +3,18 @@
 #######################################
 
 # Creates an input with prompt
+# which checkes, if the input is empty
+# If yes, the loop will continue until an input is entered
+def input_empty(prompt):
+    while(True):
+        inp = input(prompt).strip()
+        # print(len(inp))
+        if(len(inp) == 0):
+            print("No Input! Try again:")
+        else:
+            return inp   
+
+# Creates an input with prompt
 # which is checked, if the input is an integer number
 # If not, the loop will continue until a valid number is entered
 def input_int(prompt):

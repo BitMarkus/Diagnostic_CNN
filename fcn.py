@@ -16,7 +16,7 @@ def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, categor
         batch_size=batch_size,
         image_size=(img_height, img_width),     # images will be reshaped if not in this size
         shuffle=True,
-        seed=seed,                               # set seed if training should be the same any time it runs
+        seed=seed,                              # set seed if training should be the same any time it runs
         validation_split=val_split,             # images used for validation
         subset='training',
     )   
@@ -114,7 +114,7 @@ def get_callbacks(checkpoint_path):
         save_best_only=True,            # save only the best model/weights
         verbose=1,                      # show messages
         save_freq='epoch',              # check after every epoch
-        initial_value_threshold=.90,)   # minimum/maximum value for saving
+        initial_value_threshold=.85,)   # minimum/maximum value for saving
     callbacks.append(model_checkpoint_callback)
 
     # Early stopping:
@@ -179,8 +179,8 @@ def load_img(pth, category, name):
     img = keras.utils.img_to_array(img)
     img = np.expand_dims(img, axis=0)
     # Normalize pixel values to 0-1
-    # img = tf.cast(img, tf.float32)/255.0 normalize_img
-    img = normalize_img()
+    img = tf.cast(img, tf.float32)/255.0
+    # img = normalize_img()
     return img
 
 # Function predicts a single image and prints output
@@ -189,12 +189,13 @@ def predict_single_img(model, data_path, subfolder, img_name, class_names):
     img = load_img(data_path, subfolder, img_name)
     # Predict probabilities: return of a 2D numpy array (why 2D?)
     print(f"Predict class of image \"{img_name}\":")
-    probabilities = model.predict(img, verbose=1)
+    probabilities = model.predict(img, verbose=0)
     # Connect probability with the respective class label
     class_index = np.argmax(probabilities, axis=-1)
+    # print(class_index)
     pred_class_name = class_names[class_index[0]]
     pred_probability = probabilities[0][class_index[0]]*100
-    print(f"Image {img_name} belongs to class \"{pred_class_name}\" ({pred_probability:.2f}%)")   
+    print(f"  -> Image {img_name} belongs to class \"{pred_class_name}\" ({pred_probability:.2f}%)")   
 
 # Function returns a dict with all indices and layer names
 #  of all cnn layers in the model as list
