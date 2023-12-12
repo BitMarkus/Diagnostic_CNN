@@ -50,11 +50,11 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 299                  # 123
+SEED = 590                  # 123
 BATCH_SIZE = 32             # 32
 VAL_SPLIT = 0.2             # 0.3
 NUM_CLASSES = len(CLASSES)
-NUM_EPOCHS = 150            # 100
+NUM_EPOCHS = 100            # 100
 L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
 LEARNING_RATE = 0.00001     # Is also determined in the learning rate scheduler
@@ -67,6 +67,7 @@ file_writer.set_as_default()
 #############
 # Main Menu #
 #############
+
 while(True):  
     print("\n:MAIN MENU:")
     print("1) Create CNN Network")
@@ -143,7 +144,7 @@ while(True):
 
             # Get list with callbacks
             callback_list = fcn.get_callbacks(WGHT_PTH)
-            
+
             # Train model
             train_history = model.fit(
                 ds_train, 
@@ -166,7 +167,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "checkpoint_test_2classes.hdf5"
+        chkpt = "checkpoint-106-0.94.hdf5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
@@ -216,6 +217,7 @@ while(True):
         if('model' not in globals()):
             print('No network generated yet!')
         else:
+            # Get dataset for prediction
             ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, CLASSES)
             AUTOTUNE = tf.data.AUTOTUNE
             ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)

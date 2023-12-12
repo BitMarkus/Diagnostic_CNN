@@ -85,7 +85,7 @@ def cnn_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
     ###############
     # CNN LAYER 4.1:
     x = layers.Conv2D(
-        512, 
+        256, 
         3, 
         padding='same',
         name='cnn_4_1'
@@ -94,7 +94,7 @@ def cnn_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
     x = keras.activations.relu(x)
     # CNN LAYER 4.2:
     x = layers.Conv2D(
-        512, 
+        256, 
         3, 
         padding='same',
         name='cnn_4_2'
@@ -103,7 +103,7 @@ def cnn_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
     x = keras.activations.relu(x)
     # CNN LAYER 4.3:
     x = layers.Conv2D(
-        512, 
+        256, 
         3, 
         padding='same',
         name='cnn_4_3'
@@ -142,6 +142,39 @@ def cnn_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
     x = layers.BatchNormalization()(x)
     x = keras.activations.relu(x)
     x = layers.MaxPooling2D(2)(x)
+    ###############
+    # CNN BLOCK 6 #
+    ###############
+    # CNN LAYER 6.1:
+    x = layers.Conv2D(
+        512, 
+        3, 
+        padding='same',
+        name='cnn_6_1'
+    )(x)
+    x = layers.BatchNormalization()(x)
+    x = keras.activations.relu(x)
+    # CNN LAYER 6.2:
+    x = layers.Conv2D(
+        512, 
+        3, 
+        padding='same',
+        name='cnn_6_2'
+    )(x)
+    x = layers.BatchNormalization()(x)
+    x = keras.activations.relu(x)
+    # CNN LAYER 6.3:
+    x = layers.Conv2D(
+        512, 
+        3, 
+        padding='same',
+        name='cnn_6_3'
+    )(x)
+    x = layers.BatchNormalization()(x)
+    x = keras.activations.relu(x)
+    x = layers.MaxPooling2D(2)(x)
+
+    # Flatten
     x = layers.Flatten()(x)
 
     #############
@@ -150,13 +183,13 @@ def cnn_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
     # FC LAYER 1:
     if(l2_weight_decay == 0):
         x = layers.Dense(
-            1024, 
+            4096, 
             activation='relu', 
             name='fc_1'                       
         )(x)
     else:
         x = layers.Dense(
-            1024, 
+            4096, 
             activation='relu',                        
             kernel_regularizer=regularizers.l2(l2_weight_decay),
             name='fc_1'   
@@ -165,13 +198,13 @@ def cnn_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
     # FC LAYER 2:
     if(l2_weight_decay == 0):
         x = layers.Dense(
-            512, 
+            4096, 
             activation='relu', 
             name='fc_2'                       
         )(x)
     else:
         x = layers.Dense(
-            512, 
+            4096, 
             activation='relu',                        
             kernel_regularizer=regularizers.l2(l2_weight_decay),
             name='fc_2'   
