@@ -2,7 +2,7 @@ from tensorflow import keras
 from keras import layers, regularizers
 
 # Define function for model creation
-def cnn_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
+def vgg_model(ds_shape, dropout, l2_weight_decay=0, num_classes=2):
     # Input shape
     inputs = keras.Input(shape=ds_shape)
     ###############

@@ -9,7 +9,8 @@ import pathlib
 import matplotlib.pyplot as plt
 import random
 # Import own classes and functions
-from cnn import cnn_model
+from vgg19 import vgg_model
+from resnet50 import resnet_model
 import fcn
 import vis
 import menu
@@ -50,14 +51,29 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 590                  # 123
+SEED = 314                  # 123
 BATCH_SIZE = 32             # 32
-VAL_SPLIT = 0.2             # 0.3
+VAL_SPLIT = 0.3             # 0.3
 NUM_CLASSES = len(CLASSES)
 NUM_EPOCHS = 100            # 100
 L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
-LEARNING_RATE = 0.00001     # Is also determined in the learning rate scheduler
+
+# CHOOSE MODEL #
+MODEL = 'resnet'    # OR 'vgg19'
+OPT_MOMENTUM = 0.9
+# Choose optimizer for network architecture
+if(MODEL == 'resnet'):
+    # LEARNING_RATE = 0.01     # Is also determined in the learning rate scheduler!
+    # OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
+    LEARNING_RATE = 0.00001   
+    OPT = optimizer=keras.optimizers.Adam(LEARNING_RATE)
+elif(MODEL == 'vgg19'):
+    LEARNING_RATE = 0.00001   
+    OPT = optimizer=keras.optimizers.Adam(LEARNING_RATE)
+# Choose loss function
+# from_logits=False: Softmax on output layer
+LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 
 # Log learning rate in tensorboard
 # https://www.tensorflow.org/tensorboard/scalars_and_keras
@@ -91,7 +107,11 @@ while(True):
             print("A network already exists!")
         else:
             print("Creating new network...")
-            model = cnn_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)
+            # Selection of network architecture
+            if(MODEL == 'resnet'):
+                model = resnet_model(IMG_SHAPE, DROPOUT, NUM_CLASSES)
+            elif(MODEL == 'vgg19'):
+                model = vgg_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)            
             print("New network finished.")
 
     ########################
@@ -137,8 +157,8 @@ while(True):
             # Compile model
             model.compile(
                 # from_logits=False: Softmax on output layer
-                loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-                optimizer=keras.optimizers.Adam(LEARNING_RATE),
+                loss=LOSS,
+                optimizer=OPT,
                 metrics=["accuracy"],
             )
 
@@ -158,8 +178,6 @@ while(True):
             print("Evaluate model with test dataset:")
             eval_history = model.evaluate(ds_test, verbose=1) 
             vis.plot_metrics(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)   
-            # Save model (experimental) 
-            # model.save_weights(WGHT_PTH)   
         
     ##############
     # Load Model #
@@ -167,7 +185,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "checkpoint-106-0.94.hdf5"
+        chkpt = "checkpoint-64-0.85_8cl.hdf5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
@@ -224,8 +242,8 @@ while(True):
             # Compile model
             model.compile(
                 # from_logits=False: Softmax on output layer
-                loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-                optimizer=keras.optimizers.Adam(LEARNING_RATE),
+                loss=LOSS,
+                optimizer=OPT,
                 metrics=["accuracy"],
             )
             print("Evaluate model with prediction dataset:")

@@ -156,9 +156,9 @@ def get_callbacks(checkpoint_path):
 # For callback 'lr_scheduler_callback'
 def lr_scheduler(epoch):
     learning_rate = 1e-05
-    if epoch >= 20:
+    if epoch >= 60:
         learning_rate = 1e-06
-    if epoch >= 80:
+    if epoch >= 90:
         learning_rate = 1e-07
     # Log learning rate for tensorboard
     tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
