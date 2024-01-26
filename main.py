@@ -27,8 +27,8 @@ for gpu in gpus:
 print("TensorFlow version: ", tf.__version__, "")
 
 # PROGRAM PARAMETERS #
-CLASSES = ['wt', 'ko']
-# CLASSES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
+# CLASSES = ['wt', 'ko']
+CLASSES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
 # Path to dataset
 DATA_PTH = pathlib.Path('dataset/')
 # Path for saved weights
@@ -52,7 +52,7 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 581                  # 123
+SEED = 620                  # 123
 BATCH_SIZE = 32             # 32
 VAL_SPLIT = 0.2             # 0.3
 NUM_CLASSES = len(CLASSES)
