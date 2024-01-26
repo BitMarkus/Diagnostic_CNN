@@ -189,7 +189,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "xcept_SGD_checkpoint-43-0.95_8cl.hdf5"
+        chkpt = "xcept_SGD_checkpoint-36-0.97_2cl.hdf5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
