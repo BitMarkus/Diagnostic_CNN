@@ -12,6 +12,7 @@ import random
 from vgg19 import vgg_model
 from resnet50 import resnet_model
 from xception import xception_model
+from densenet import densenet_model
 import fcn
 import vis
 import menu
@@ -53,15 +54,15 @@ INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
 SEED = 620                  # 123
-BATCH_SIZE = 32             # 32
+BATCH_SIZE = 16             # 32, for DenseNet201 only 16 works
 VAL_SPLIT = 0.2             # 0.3
 NUM_CLASSES = len(CLASSES)
-NUM_EPOCHS = 50            # 100
+NUM_EPOCHS = 50             # 100
 L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
 
 # CHOOSE MODEL #
-MODEL = 'xception'    # OR 'vgg19' OR 'resnet'
+MODEL = 'densenet'    # OR 'vgg19' OR 'resnet'
 OPT_MOMENTUM = 0.9
 # Choose optimizer and loss function for network architecture
 if(MODEL == 'resnet'):
@@ -73,6 +74,10 @@ elif(MODEL == 'vgg19'):
     OPT = optimizer=keras.optimizers.Adam(LEARNING_RATE)
     LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 elif(MODEL == 'xception'):
+    LEARNING_RATE = 0.01 
+    OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
+    LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+elif(MODEL == 'densenet'):
     LEARNING_RATE = 0.01 
     OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
     LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
@@ -115,7 +120,9 @@ while(True):
             elif(MODEL == 'vgg19'):
                 model = vgg_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)   
             elif(MODEL == 'xception'):
-                model = xception_model(IMG_SHAPE, NUM_CLASSES)           
+                model = xception_model(IMG_SHAPE, NUM_CLASSES)    
+            elif(MODEL == 'densenet'):
+                model = densenet_model(IMG_SHAPE, NUM_CLASSES)          
             print("New network finished.")
 
     ########################
@@ -189,7 +196,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "xcept_SGD_checkpoint-36-0.97_2cl.hdf5"
+        chkpt = "densenet_SGD_checkpoint-39-0.94_8cl.hdf5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
