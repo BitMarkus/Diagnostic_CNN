@@ -7,3 +7,5 @@ This includes so far a:
 - Xception architecture
 
 This is not a full program yet as it requires manual adjustments in the source code to change CNN architectures and models. It is more for me to learn and to play around.
+
+The aim of this study is to diagnose different diseases using patient fibroblasts. Due to data protection there are no images included!
