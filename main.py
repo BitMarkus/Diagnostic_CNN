@@ -11,6 +11,7 @@ import random
 # Import own classes and functions
 from vgg19 import vgg_model
 from resnet50 import resnet_model
+from xception import xception_model
 import fcn
 import vis
 import menu
@@ -51,29 +52,30 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 314                  # 123
+SEED = 581                  # 123
 BATCH_SIZE = 32             # 32
-VAL_SPLIT = 0.3             # 0.3
+VAL_SPLIT = 0.2             # 0.3
 NUM_CLASSES = len(CLASSES)
-NUM_EPOCHS = 100            # 100
+NUM_EPOCHS = 50            # 100
 L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
 
 # CHOOSE MODEL #
-MODEL = 'resnet'    # OR 'vgg19'
+MODEL = 'xception'    # OR 'vgg19' OR 'resnet'
 OPT_MOMENTUM = 0.9
-# Choose optimizer for network architecture
+# Choose optimizer and loss function for network architecture
 if(MODEL == 'resnet'):
-    # LEARNING_RATE = 0.01     # Is also determined in the learning rate scheduler!
-    # OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
-    LEARNING_RATE = 0.00001   
-    OPT = optimizer=keras.optimizers.Adam(LEARNING_RATE)
+    LEARNING_RATE = 0.01     # Is also determined in the learning rate scheduler!
+    OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
+    LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False) # from_logits=False: Softmax on output layer
 elif(MODEL == 'vgg19'):
     LEARNING_RATE = 0.00001   
     OPT = optimizer=keras.optimizers.Adam(LEARNING_RATE)
-# Choose loss function
-# from_logits=False: Softmax on output layer
-LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+    LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+elif(MODEL == 'xception'):
+    LEARNING_RATE = 0.01 
+    OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
+    LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 
 # Log learning rate in tensorboard
 # https://www.tensorflow.org/tensorboard/scalars_and_keras
@@ -111,7 +113,9 @@ while(True):
             if(MODEL == 'resnet'):
                 model = resnet_model(IMG_SHAPE, DROPOUT, NUM_CLASSES)
             elif(MODEL == 'vgg19'):
-                model = vgg_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)            
+                model = vgg_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)   
+            elif(MODEL == 'xception'):
+                model = xception_model(IMG_SHAPE, NUM_CLASSES)           
             print("New network finished.")
 
     ########################
@@ -185,7 +189,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "checkpoint-64-0.85_8cl.hdf5"
+        chkpt = "xcept_SGD_checkpoint-43-0.95_8cl.hdf5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):

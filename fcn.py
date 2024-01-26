@@ -114,7 +114,7 @@ def get_callbacks(checkpoint_path):
         save_best_only=True,            # save only the best model/weights
         verbose=1,                      # show messages
         save_freq='epoch',              # check after every epoch
-        initial_value_threshold=.85,)   # minimum/maximum value for saving
+        initial_value_threshold=.7,)   # minimum/maximum value for saving
     callbacks.append(model_checkpoint_callback)
 
     # Early stopping:
@@ -155,11 +155,21 @@ def get_callbacks(checkpoint_path):
 # Function for reducing the learning rate dependent on the epoch
 # For callback 'lr_scheduler_callback'
 def lr_scheduler(epoch):
+    
+    # SGD optimizer
+    learning_rate = 1e-02
+    if epoch >= 20:
+        learning_rate = 1e-03
+    if epoch >= 40:
+        learning_rate = 1e-04
+    """
+    # ADAM optimizer
     learning_rate = 1e-05
-    if epoch >= 60:
+    if epoch >= 20:
         learning_rate = 1e-06
-    if epoch >= 90:
+    if epoch >= 40:
         learning_rate = 1e-07
+    """
     # Log learning rate for tensorboard
     tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
     return learning_rate
