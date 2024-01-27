@@ -155,24 +155,18 @@ def get_callbacks(checkpoint_path):
 # Function for reducing the learning rate dependent on the epoch
 # For callback 'lr_scheduler_callback'
 def lr_scheduler(epoch):
-    # SGD optimizer 2
+    # SGD optimizer
     learning_rate = 0.01
-    if epoch >= 5:
-        learning_rate = 0.005
     if epoch >= 10:
+        learning_rate = 0.005
+    if epoch >= 20:
         learning_rate = 0.001
-    if epoch >= 20:
-        learning_rate = 0.0005
     if epoch >= 30:
-        learning_rate = 0.0001
-    """  
-    # SGD optimizer 1
-    learning_rate = 1e-02
-    if epoch >= 20:
-        learning_rate = 1e-03
+        learning_rate = 0.0005
     if epoch >= 40:
-        learning_rate = 1e-04
-    """
+        learning_rate = 0.0001
+    if epoch >= 45:
+        learning_rate = 0.00005
     """
     # ADAM optimizer
     learning_rate = 1e-05
@@ -180,7 +174,7 @@ def lr_scheduler(epoch):
         learning_rate = 1e-06
     if epoch >= 40:
         learning_rate = 1e-07
-    """
+    """ 
     # Log learning rate for tensorboard
     tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
     return learning_rate

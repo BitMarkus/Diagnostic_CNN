@@ -28,8 +28,8 @@ for gpu in gpus:
 print("TensorFlow version: ", tf.__version__, "")
 
 # PROGRAM PARAMETERS #
-# CLASSES = ['wt', 'ko']
-CLASSES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
+CLASSES = ['wt', 'ko']
+# CLASSES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
 # Path to dataset
 DATA_PTH = pathlib.Path('dataset/')
 # Path for saved weights
@@ -54,7 +54,7 @@ INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
 SEED = 620                  # 123
-BATCH_SIZE = 16             # 32, for DenseNet201 only 16 works
+BATCH_SIZE = 32             # 32, for DenseNet201 only 16 works
 VAL_SPLIT = 0.2             # 0.3
 NUM_CLASSES = len(CLASSES)
 NUM_EPOCHS = 50             # 100
@@ -62,7 +62,7 @@ L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
 
 # CHOOSE MODEL #
-MODEL = 'densenet'    # OR 'vgg19' OR 'resnet'
+MODEL = 'densenet' 
 OPT_MOMENTUM = 0.9
 # Choose optimizer and loss function for network architecture
 if(MODEL == 'resnet'):
@@ -196,7 +196,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "densenet_SGD_checkpoint-39-0.94_8cl.hdf5"
+        chkpt = "densenet201_SGD_checkpoint-47-0.93_8cl.hdf5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
