@@ -1,17 +1,17 @@
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
+from itertools import product
 import os
 import numpy as np
 
 # Prepare training, validation and test dataset
-def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, categories):
+def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed):
     # Training dataset:
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,                               # directory with training images, classes in seperate folders
         labels='inferred',                      # lables are taken from subfolder names
         label_mode="int",                       # OR categorical, binary
-        class_names=categories,
         color_mode='grayscale',                 # OR rgb
         batch_size=batch_size,
         image_size=(img_height, img_width),     # images will be reshaped if not in this size
@@ -25,7 +25,6 @@ def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, categor
         data_dir,                              
         labels='inferred',                     
         label_mode="int",                       
-        class_names=categories,
         color_mode='grayscale',                     
         batch_size=batch_size,
         image_size=(img_height, img_width),    
@@ -45,13 +44,12 @@ def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, categor
     return ds_train, ds_validation, ds_test
 
 # Prepare evaluation dataset
-def get_pred_ds(pred_dir, batch_size, img_height, img_width, categories):
+def get_pred_ds(pred_dir, batch_size, img_height, img_width):
     # Training dataset:
     ds_pred = tf.keras.preprocessing.image_dataset_from_directory(
         pred_dir,                               
         labels='inferred',                      
         label_mode="int",                      
-        class_names=categories,
         color_mode='grayscale',                
         batch_size=batch_size,
         image_size=(img_height, img_width),     
@@ -114,7 +112,7 @@ def get_callbacks(checkpoint_path):
         save_best_only=True,            # save only the best model/weights
         verbose=1,                      # show messages
         save_freq='epoch',              # check after every epoch
-        initial_value_threshold=.9,)   # minimum/maximum value for saving
+        initial_value_threshold=.85,)   # minimum/maximum value for saving
     callbacks.append(model_checkpoint_callback)
 
     # Early stopping:
@@ -155,6 +153,7 @@ def get_callbacks(checkpoint_path):
 # Function for reducing the learning rate dependent on the epoch
 # For callback 'lr_scheduler_callback'
 def lr_scheduler(epoch):
+    """
     # SGD optimizer
     learning_rate = 0.01
     if epoch >= 10:
@@ -167,14 +166,18 @@ def lr_scheduler(epoch):
         learning_rate = 0.0001
     if epoch >= 45:
         learning_rate = 0.00005
-    """
-    # ADAM optimizer
-    learning_rate = 1e-05
-    if epoch >= 20:
-        learning_rate = 1e-06
-    if epoch >= 40:
-        learning_rate = 1e-07
     """ 
+    # ADAM optimizer
+    learning_rate = 0.00001
+    if epoch >= 40:
+        learning_rate = 0.000005
+    if epoch >= 60:
+        learning_rate = 0.000001
+    if epoch >= 80:
+        learning_rate = 0.0000005
+    if epoch >= 90:
+        learning_rate = 0.0000001
+
     # Log learning rate for tensorboard
     tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
     return learning_rate
@@ -234,7 +237,35 @@ def get_class_names(data_dir):
         # Only folders, no files
         if os.path.isdir(d): 
             class_list.append(file)
+    class_list.sort()
     return class_list
+
+# Returns a matplotlib figure containing the plotted confusion matrix
+# https://www.tensorflow.org/tensorboard/image_summaries
+# cm (array, shape = [n, n]): a confusion matrix of integer classes
+# class_names (array, shape = [n]): String names of the integer classes
+def plot_confusion_matrix(cm, class_names):
+  figure = plt.figure(figsize=(8, 8))
+  plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+  plt.title("Confusion matrix")
+  plt.colorbar()
+  tick_marks = np.arange(len(class_names))
+  plt.xticks(tick_marks, class_names, rotation=45)
+  plt.yticks(tick_marks, class_names)
+
+  # Compute the labels from the normalized confusion matrix.
+  labels = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+
+  # Use white text if squares are dark; otherwise black.
+  threshold = cm.max() / 2.
+  for i, j in product(range(cm.shape[0]), range(cm.shape[1])):
+    color = "white" if cm[i, j] > threshold else "black"
+    plt.text(j, i, labels[i, j], horizontalalignment="center", color=color)
+
+  plt.tight_layout()
+  plt.ylabel('True label')
+  plt.xlabel('Predicted label')
+  return figure
 
 # Function counts the number of cnn layers in a model
 """

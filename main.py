@@ -8,6 +8,7 @@ from tensorflow import keras
 import pathlib
 import matplotlib.pyplot as plt
 import random
+import numpy as np
 # Import own classes and functions
 from vgg19 import vgg_model
 from resnet50 import resnet_model
@@ -28,7 +29,7 @@ for gpu in gpus:
 print("TensorFlow version: ", tf.__version__, "")
 
 # PROGRAM PARAMETERS #
-CLASSES = ['wt', 'ko']
+# CLASSES = ['wt', 'ko']
 # CLASSES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
 # Path to dataset
 DATA_PTH = pathlib.Path('dataset/')
@@ -39,11 +40,15 @@ LOG_PTH = pathlib.Path("logs/")
 # Path for logging learning rate
 LOG_LR_PTH = LOG_PTH / "scalars/learning_rate/"
 # Path auto save the plots at the end of the training
-PLOT_PTH = pathlib.Path("plots/" + '_'.join(CLASSES) + "/") 
+PLOT_PTH = pathlib.Path("plots/") 
 # Path for visualizations
 VIS_PTH = pathlib.Path("vis/")
 # Path for prediction images
 PRED_PTH = pathlib.Path("predictions/")
+
+# CLASS PARAMETERS #
+CLASS_NAMES = fcn.get_class_names(DATA_PTH)
+NUM_CLASSES = len(CLASS_NAMES)
 
 # IMAGE PARAMETERS #
 IMG_HEIGHT = 442
@@ -53,16 +58,15 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 620                  # 123
+SEED = 111                  # 123
 BATCH_SIZE = 32             # 32, for DenseNet201 only 16 works
 VAL_SPLIT = 0.2             # 0.3
-NUM_CLASSES = len(CLASSES)
-NUM_EPOCHS = 50             # 100
+NUM_EPOCHS = 1              # 100 for vgg19, 50 for othet networks
 L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
 
 # CHOOSE MODEL #
-MODEL = 'densenet' 
+MODEL = 'xception' 
 OPT_MOMENTUM = 0.9
 # Choose optimizer and loss function for network architecture
 if(MODEL == 'resnet'):
@@ -100,7 +104,8 @@ while(True):
     print("5) Load Model")
     print("6) Predict random Images in Folder")
     print("7) Predict all Images in Folder")
-    print("8) Exit Program")
+    print("8) Plot confusion matrix")
+    print("9) Exit Program")
     menu1 = int(menu.input_int("Please choose: "))
 
     ######################
@@ -142,11 +147,9 @@ while(True):
      
     elif(menu1 == 3):       
         print("\n:LOAD TRAINING DATA:")  
+        print("Classes: ", CLASS_NAMES)   
         # Get training, validation and test data
-        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED, CLASSES)
-        # Get class names
-        class_names = ds_train.class_names
-        print("Classes: ", class_names)    
+        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED) 
         # Data tuning
         AUTOTUNE = tf.data.AUTOTUNE
         ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test, AUTOTUNE)
@@ -188,7 +191,7 @@ while(True):
             # Evaluate model
             print("Evaluate model with test dataset:")
             eval_history = model.evaluate(ds_test, verbose=1) 
-            vis.plot_metrics(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)   
+            vis.plot_metrics(train_history, eval_history, PLOT_PTH, SEED, show_plot=True, save_plot=True)  
         
     ##############
     # Load Model #
@@ -196,7 +199,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "densenet201_SGD_checkpoint-47-0.93_8cl.hdf5"
+        chkpt = "xception_SGD_02_checkpoint-32-0.96_8cl.hdf5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
@@ -231,7 +234,7 @@ while(True):
                     # print(choice_list)
                     # Make predictions
                     for pred_img in choice_list:
-                        fcn.predict_single_img(model, PRED_PTH, subfolder, pred_img, CLASSES)
+                        fcn.predict_single_img(model, PRED_PTH, subfolder, pred_img, CLASS_NAMES)
                 else:
                     print(f"Not enough images in folder (max {len(folder_list)})!")     
             else:
@@ -247,7 +250,7 @@ while(True):
             print('No network generated yet!')
         else:
             # Get dataset for prediction
-            ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, CLASSES)
+            ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH)
             AUTOTUNE = tf.data.AUTOTUNE
             ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)
             # Compile model
@@ -260,13 +263,33 @@ while(True):
             print("Evaluate model with prediction dataset:")
             model.evaluate(ds_pred, verbose=1) 
 
+    #########################
+    # Plot confusion matrix #
+    #########################
+            
+    elif(menu1 == 8):
+        # Get dataset for prediction
+        ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH)
+        AUTOTUNE = tf.data.AUTOTUNE
+        ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)
+        # Get predictions and labels for the test dataset
+        # https://stackoverflow.com/questions/64687375/get-labels-from-dataset-when-using-tensorflow-image-dataset-from-directory
+        predictions = np.array([])
+        for x, y in ds_pred:
+            predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
+        labels = np.concatenate([y for x, y in ds_pred], axis=0)
+        # Create confusion matrix and normalizes it over predicted (columns)
+        # Make a numpy array of the matrix data
+        result = tf.math.confusion_matrix(labels=labels, predictions=predictions).numpy()
+        conf_matr = fcn.plot_confusion_matrix(result, CLASS_NAMES)
+        conf_matr.show()
+
     ################
     # Exit Program #
     ################
 
-    elif(menu1 == 8):
+    elif(menu1 == 9):
         print("\nExit program...")
-        break 
     
     # Wrong Input
     else:
@@ -274,4 +297,4 @@ while(True):
 
 # Last line in main program to keep plots open after program execution is finished
 # see function show_plot_exec() in vis.py
-plt.show()
+# plt.show()
