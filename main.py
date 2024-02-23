@@ -47,7 +47,10 @@ VIS_PTH = pathlib.Path("vis/")
 PRED_PTH = pathlib.Path("predictions/")
 
 # CLASS PARAMETERS #
-CLASS_NAMES = fcn.get_class_names(DATA_PTH)
+# Function does not work for confusion matrix
+# The order of the classes is wrong, no idea why???
+# CLASS_NAMES = fcn.get_class_names(DATA_PTH)
+CLASS_NAMES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
 NUM_CLASSES = len(CLASS_NAMES)
 
 # IMAGE PARAMETERS #
@@ -149,7 +152,7 @@ while(True):
         print("\n:LOAD TRAINING DATA:")  
         print("Classes: ", CLASS_NAMES)   
         # Get training, validation and test data
-        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED) 
+        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED, CLASS_NAMES) 
         # Data tuning
         AUTOTUNE = tf.data.AUTOTUNE
         ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test, AUTOTUNE)
@@ -269,7 +272,7 @@ while(True):
             
     elif(menu1 == 8):
         # Get dataset for prediction
-        ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH)
+        ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, CLASS_NAMES)
         AUTOTUNE = tf.data.AUTOTUNE
         ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)
         # Get predictions and labels for the test dataset
@@ -280,7 +283,7 @@ while(True):
         labels = np.concatenate([y for x, y in ds_pred], axis=0)
         # Create confusion matrix and normalizes it over predicted (columns)
         # Make a numpy array of the matrix data
-        result = tf.math.confusion_matrix(labels=labels, predictions=predictions).numpy()
+        result = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
         conf_matr = fcn.plot_confusion_matrix(result, CLASS_NAMES)
         conf_matr.show()
 
@@ -290,6 +293,7 @@ while(True):
 
     elif(menu1 == 9):
         print("\nExit program...")
+        break
     
     # Wrong Input
     else:

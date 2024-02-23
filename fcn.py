@@ -6,12 +6,13 @@ import os
 import numpy as np
 
 # Prepare training, validation and test dataset
-def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed):
+def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, class_names):
     # Training dataset:
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,                               # directory with training images, classes in seperate folders
         labels='inferred',                      # lables are taken from subfolder names
         label_mode="int",                       # OR categorical, binary
+        class_names=class_names, 
         color_mode='grayscale',                 # OR rgb
         batch_size=batch_size,
         image_size=(img_height, img_width),     # images will be reshaped if not in this size
@@ -24,7 +25,8 @@ def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed):
     ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,                              
         labels='inferred',                     
-        label_mode="int",                       
+        label_mode="int",  
+        class_names=class_names,                      
         color_mode='grayscale',                     
         batch_size=batch_size,
         image_size=(img_height, img_width),    
@@ -44,12 +46,13 @@ def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed):
     return ds_train, ds_validation, ds_test
 
 # Prepare evaluation dataset
-def get_pred_ds(pred_dir, batch_size, img_height, img_width):
+def get_pred_ds(pred_dir, batch_size, img_height, img_width, class_names):
     # Training dataset:
     ds_pred = tf.keras.preprocessing.image_dataset_from_directory(
         pred_dir,                               
         labels='inferred',                      
-        label_mode="int",                      
+        label_mode="int", 
+        class_names=class_names,                     
         color_mode='grayscale',                
         batch_size=batch_size,
         image_size=(img_height, img_width),     
@@ -237,7 +240,8 @@ def get_class_names(data_dir):
         # Only folders, no files
         if os.path.isdir(d): 
             class_list.append(file)
-    class_list.sort()
+    # sort list alphabetically
+    # class_list.sort(reverse = True)
     return class_list
 
 # Returns a matplotlib figure containing the plotted confusion matrix
@@ -245,27 +249,27 @@ def get_class_names(data_dir):
 # cm (array, shape = [n, n]): a confusion matrix of integer classes
 # class_names (array, shape = [n]): String names of the integer classes
 def plot_confusion_matrix(cm, class_names):
-  figure = plt.figure(figsize=(8, 8))
-  plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-  plt.title("Confusion matrix")
-  plt.colorbar()
-  tick_marks = np.arange(len(class_names))
-  plt.xticks(tick_marks, class_names, rotation=45)
-  plt.yticks(tick_marks, class_names)
+    figure = plt.figure(figsize=(8, 8))
+    img = plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title("Confusion matrix")
+    plt.colorbar(img)
+    tick_marks = np.arange(len(class_names))
+    plt.xticks(tick_marks, class_names, rotation=45)
+    plt.yticks(tick_marks, class_names)
 
-  # Compute the labels from the normalized confusion matrix.
-  labels = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+    # Compute the labels from the normalized confusion matrix.
+    labels = np.around((cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]) * 100, decimals=1)
 
-  # Use white text if squares are dark; otherwise black.
-  threshold = cm.max() / 2.
-  for i, j in product(range(cm.shape[0]), range(cm.shape[1])):
-    color = "white" if cm[i, j] > threshold else "black"
-    plt.text(j, i, labels[i, j], horizontalalignment="center", color=color)
-
-  plt.tight_layout()
-  plt.ylabel('True label')
-  plt.xlabel('Predicted label')
-  return figure
+    # Use white text if squares are dark; otherwise black.
+    threshold = cm.max() / 2.
+    for i, j in product(range(cm.shape[0]), range(cm.shape[1])):
+        color = "white" if cm[i, j] > threshold else "black"
+        plt.text(j, i, labels[i, j], horizontalalignment="center", color=color)
+   
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+    return figure
 
 # Function counts the number of cnn layers in a model
 """
