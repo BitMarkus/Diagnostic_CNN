@@ -37,7 +37,7 @@ def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=True, s
     loss = train_history.history['loss']
     val_loss = train_history.history['val_loss']
     # Learning rate
-    lr = train_history.history['lr']
+    lr = train_history.history['learning_rate']
     # Number of epochs
     epochs_range = range(1, len(acc) + 1)
     # Draw plots

@@ -6,7 +6,6 @@ from os.path import isfile, join
 import tensorflow as tf
 from tensorflow import keras
 import pathlib
-import matplotlib.pyplot as plt
 import random
 import numpy as np
 # Import own classes and functions
@@ -29,12 +28,10 @@ for gpu in gpus:
 print("TensorFlow version: ", tf.__version__, "")
 
 # PROGRAM PARAMETERS #
-# CLASSES = ['wt', 'ko']
-# CLASSES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
 # Path to dataset
 DATA_PTH = pathlib.Path('dataset/')
 # Path for saved weights
-WGHT_PTH = pathlib.Path("weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.hdf5")
+WGHT_PTH = pathlib.Path("weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.weights.h5")
 # Path for tensorboard logs
 LOG_PTH = pathlib.Path("logs/")
 # Path for logging learning rate
@@ -49,22 +46,23 @@ PRED_PTH = pathlib.Path("predictions/")
 # CLASS PARAMETERS #
 # Function does not work for confusion matrix
 # The order of the classes is wrong, no idea why???
-# CLASS_NAMES = fcn.get_class_names(DATA_PTH)
-CLASS_NAMES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
+CLASS_NAMES = fcn.get_class_names(DATA_PTH)
+# CLASS_NAMES = ['wt', 'ko']
+# CLASS_NAMES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
 NUM_CLASSES = len(CLASS_NAMES)
 
 # IMAGE PARAMETERS #
-IMG_HEIGHT = 442
-IMG_WIDTH = 550
-IMG_CHANNELS = 1    # Image channels -> Grayscale = 1
+IMG_HEIGHT = 512   # 442
+IMG_WIDTH = 512    # 550
+IMG_CHANNELS = 1   # Image channels -> Grayscale = 1
 IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 111                  # 123
+SEED = 222                  # 123
 BATCH_SIZE = 32             # 32, for DenseNet201 only 16 works
 VAL_SPLIT = 0.2             # 0.3
-NUM_EPOCHS = 1              # 100 for vgg19, 50 for othet networks
+NUM_EPOCHS = 50             # 100 for vgg19, 50 for othet networks
 L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
 
@@ -202,7 +200,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "xception_SGD_02_checkpoint-32-0.96_8cl.hdf5"
+        chkpt = "xception_checkpoint-41-0.93_8cl_sorted.weights.h5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
@@ -278,9 +276,9 @@ while(True):
         # Get predictions and labels for the test dataset
         # https://stackoverflow.com/questions/64687375/get-labels-from-dataset-when-using-tensorflow-image-dataset-from-directory
         predictions = np.array([])
-        for x, y in ds_pred:
+        for x, y in ds_test:
             predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
-        labels = np.concatenate([y for x, y in ds_pred], axis=0)
+        labels = np.concatenate([y for x, y in ds_test], axis=0)
         # Create confusion matrix and normalizes it over predicted (columns)
         # Make a numpy array of the matrix data
         result = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()

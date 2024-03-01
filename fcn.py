@@ -138,7 +138,7 @@ def get_callbacks(checkpoint_path):
         log_dir="logs",             # Directory to store log files
         histogram_freq=0,           # frequency (in epochs) at which to compute activation histograms for the layers of the model
         write_graph=True,           # whether to visualize the graph in Tensorboard
-        write_grads=False,          # whether to visualize gradient histograms in TensorBoard (histogram_freq must be greater than 0)
+        # write_grads=False,        # <- doesn't work anymore in new tensorflow/keras version
         write_images=False,         # whether to write model weights to visualize as image in Tensorboard
         update_freq="epoch",        # 'batch' or 'epoch' or integer.
     )
@@ -156,7 +156,6 @@ def get_callbacks(checkpoint_path):
 # Function for reducing the learning rate dependent on the epoch
 # For callback 'lr_scheduler_callback'
 def lr_scheduler(epoch):
-    """
     # SGD optimizer
     learning_rate = 0.01
     if epoch >= 10:
@@ -180,7 +179,7 @@ def lr_scheduler(epoch):
         learning_rate = 0.0000005
     if epoch >= 90:
         learning_rate = 0.0000001
-
+    """
     # Log learning rate for tensorboard
     tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
     return learning_rate
@@ -241,7 +240,7 @@ def get_class_names(data_dir):
         if os.path.isdir(d): 
             class_list.append(file)
     # sort list alphabetically
-    # class_list.sort(reverse = True)
+    class_list.sort()
     return class_list
 
 # Returns a matplotlib figure containing the plotted confusion matrix
