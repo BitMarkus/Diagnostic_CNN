@@ -69,6 +69,7 @@ def normalize_img(image, label):
     return img, label
 
 # Function for data augmentation
+# Not used for now
 def augment_img(image, label):
     # Further data augmentation
     # image = tf.image.random_brightness(image, max_delta=0.1)
@@ -138,7 +139,6 @@ def get_callbacks(checkpoint_path):
         log_dir="logs",             # Directory to store log files
         histogram_freq=0,           # frequency (in epochs) at which to compute activation histograms for the layers of the model
         write_graph=True,           # whether to visualize the graph in Tensorboard
-        # write_grads=False,        # <- doesn't work anymore in new tensorflow/keras version
         write_images=False,         # whether to write model weights to visualize as image in Tensorboard
         update_freq="epoch",        # 'batch' or 'epoch' or integer.
     )
@@ -180,8 +180,6 @@ def lr_scheduler(epoch):
     if epoch >= 90:
         learning_rate = 0.0000001
     """
-    # Log learning rate for tensorboard
-    tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
     return learning_rate
 
 # Function loads a single image for prdictions
@@ -216,7 +214,7 @@ def predict_single_img(model, data_path, subfolder, img_name, class_names):
     print(f"  -> Image {img_name} belongs to class \"{pred_class_name}\" ({pred_probability:.2f}%)")   
 
 # Function returns a dict with all indices and layer names
-#  of all cnn layers in the model as list
+# of all cnn layers in the model as list
 def get_cnn_layer_info(model):
     conv_layers_index = []
     for idx, layer in enumerate(model.layers):

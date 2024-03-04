@@ -34,8 +34,6 @@ DATA_PTH = pathlib.Path('dataset/')
 WGHT_PTH = pathlib.Path("weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.weights.h5")
 # Path for tensorboard logs
 LOG_PTH = pathlib.Path("logs/")
-# Path for logging learning rate
-LOG_LR_PTH = LOG_PTH / "scalars/learning_rate/"
 # Path auto save the plots at the end of the training
 PLOT_PTH = pathlib.Path("plots/") 
 # Path for visualizations
@@ -44,11 +42,8 @@ VIS_PTH = pathlib.Path("vis/")
 PRED_PTH = pathlib.Path("predictions/")
 
 # CLASS PARAMETERS #
-# Function does not work for confusion matrix
-# The order of the classes is wrong, no idea why???
+# Class names according to the folder structure in the prediction folder 
 CLASS_NAMES = fcn.get_class_names(DATA_PTH)
-# CLASS_NAMES = ['wt', 'ko']
-# CLASS_NAMES = ['WT_1618-02', 'WT_JG', 'WT_KM', 'WT_MS', 'KO_1096-01', 'KO_1618-01', 'KO_BR2986', 'KO_BR3075']
 NUM_CLASSES = len(CLASS_NAMES)
 
 # IMAGE PARAMETERS #
@@ -59,7 +54,7 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
 # NETWORK HYPERPARAMETERS #
-SEED = 222                  # 123
+SEED = 333                  # 123
 BATCH_SIZE = 32             # 32, for DenseNet201 only 16 works
 VAL_SPLIT = 0.2             # 0.3
 NUM_EPOCHS = 50             # 100 for vgg19, 50 for othet networks
@@ -86,11 +81,6 @@ elif(MODEL == 'densenet'):
     LEARNING_RATE = 0.01 
     OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
     LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
-
-# Log learning rate in tensorboard
-# https://www.tensorflow.org/tensorboard/scalars_and_keras
-file_writer = tf.summary.create_file_writer(str(LOG_LR_PTH))
-file_writer.set_as_default()
 
 #############
 # Main Menu #
@@ -200,7 +190,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "xception_checkpoint-41-0.93_8cl_sorted.weights.h5"
+        chkpt = "xception_checkpoint-36-0.92_8cl.weights.h5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
@@ -276,9 +266,9 @@ while(True):
         # Get predictions and labels for the test dataset
         # https://stackoverflow.com/questions/64687375/get-labels-from-dataset-when-using-tensorflow-image-dataset-from-directory
         predictions = np.array([])
-        for x, y in ds_test:
+        for x, y in ds_pred:
             predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
-        labels = np.concatenate([y for x, y in ds_test], axis=0)
+        labels = np.concatenate([y for x, y in ds_pred], axis=0)
         # Create confusion matrix and normalizes it over predicted (columns)
         # Make a numpy array of the matrix data
         result = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
