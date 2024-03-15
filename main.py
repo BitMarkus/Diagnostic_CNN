@@ -229,21 +229,30 @@ while(True):
     #########################
             
     elif(menu1 == 8):
-        # Get dataset for prediction
-        ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
-        AUTOTUNE = tf.data.AUTOTUNE
-        ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)
-        # Get predictions and labels for the test dataset
-        # https://stackoverflow.com/questions/64687375/get-labels-from-dataset-when-using-tensorflow-image-dataset-from-directory
-        predictions = np.array([])
-        for x, y in ds_pred:
-            predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
-        labels = np.concatenate([y for x, y in ds_pred], axis=0)
-        # Create confusion matrix and normalizes it over predicted (columns)
-        # Make a numpy array of the matrix data
-        result = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
-        conf_matr = fcn.plot_confusion_matrix(result, CLASS_NAMES)
-        conf_matr.show()
+        print("\n:PLOT CONFUSION MATRIX:") 
+        if('model' not in globals()):
+            print('No network generated yet!')
+        else:
+            # Check folders in prediction folder
+            pred_folders = fcn.get_class_names(PRED_PTH)
+            if(pred_folders != CLASS_NAMES):
+                print('Folder structure in predict/ folder does not match with dataset/ folder!')
+            else:
+                # Get dataset for prediction
+                ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
+                AUTOTUNE = tf.data.AUTOTUNE
+                ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)
+                # Get predictions and labels for the test dataset
+                # https://stackoverflow.com/questions/64687375/get-labels-from-dataset-when-using-tensorflow-image-dataset-from-directory
+                predictions = np.array([])
+                for x, y in ds_pred:
+                    predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
+                labels = np.concatenate([y for x, y in ds_pred], axis=0)
+                # Create confusion matrix and normalizes it over predicted (columns)
+                # Make a numpy array of the matrix data
+                result = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
+                conf_matr = fcn.plot_confusion_matrix(result, CLASS_NAMES)
+                conf_matr.show()                
 
     ################
     # Exit Program #
