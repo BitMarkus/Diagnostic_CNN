@@ -1,19 +1,32 @@
+# Tensorboard:
+# 1) Activate anaconda environment for tensorflow (tf_gpu)
+# 2) Go to folder where tensorflow script is (cd /home/markus/tensorflow/projects/Diagnostic_CNN)
+# 3) Type into console: tensorboard --logdir logs (<- Folder specified below)
+# 4) Go to shown URL: http://localhost:6006
+
+# Access files in WSL Ubuntu using windows explorer:
+# https://ling123labs.com/posts/WSL-files-in-Windows-and-vice-versa/
+# To access your Linux files in Windows, open the Ubuntu terminal and type: explorer.exe . (<- include the punctuation mark)
+# This will open the linux directory in Windows Explorer, with the WSL prefix “\wsl$\Ubuntu-18.04\home\your-username”
+
 import tensorflow as tf
-from tensorflow import keras
+from tensorflow.python.platform import build_info as tf_build_info
+import keras
+import sys
 import matplotlib.pyplot as plt
 from itertools import product
 import os
 import numpy as np
 
 # Prepare training, validation and test dataset
-def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, class_names):
+def get_ds(data_dir, batch_size, img_height, img_width, color_mode, val_split, seed, class_names):
     # Training dataset:
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,                               # directory with training images, classes in seperate folders
         labels='inferred',                      # lables are taken from subfolder names
         label_mode="int",                       # OR categorical, binary
         class_names=class_names, 
-        color_mode='grayscale',                 # OR rgb
+        color_mode=color_mode,                       # grayscale OR rgb
         batch_size=batch_size,
         image_size=(img_height, img_width),     # images will be reshaped if not in this size
         shuffle=True,
@@ -27,7 +40,7 @@ def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, class_n
         labels='inferred',                     
         label_mode="int",  
         class_names=class_names,                      
-        color_mode='grayscale',                     
+        color_mode=color_mode,                     
         batch_size=batch_size,
         image_size=(img_height, img_width),    
         shuffle=True,
@@ -46,14 +59,14 @@ def get_ds(data_dir, batch_size, img_height, img_width, val_split, seed, class_n
     return ds_train, ds_validation, ds_test
 
 # Prepare evaluation dataset
-def get_pred_ds(pred_dir, batch_size, img_height, img_width, class_names):
+def get_pred_ds(pred_dir, batch_size, img_height, img_width, color_mode, class_names):
     # Training dataset:
     ds_pred = tf.keras.preprocessing.image_dataset_from_directory(
         pred_dir,                               
         labels='inferred',                      
         label_mode="int", 
         class_names=class_names,                     
-        color_mode='grayscale',                
+        color_mode=color_mode,                
         batch_size=batch_size,
         image_size=(img_height, img_width),     
         shuffle=True,
@@ -84,7 +97,10 @@ def tune_img(ds_train, ds_validation, ds_test, autotune):
     # Prepare dataset and configure dataset for performance
     # Setup for training dataset:
     ds_train = ds_train.map(normalize_img, num_parallel_calls=autotune)
-    ds_train = ds_train.cache()
+    # Caching could be the problem why the program can't train on more than 20.000 images
+    # https://www.tensorflow.org/tutorials/load_data/images
+    # Dataset.cache keeps the images in memory after they're loaded off disk during the first epoch
+    ds_train = ds_train.cache() 
     ds_train = ds_train.prefetch(buffer_size=autotune)
     # Setup for validation dataset:
     ds_validation = ds_validation.map(normalize_img, num_parallel_calls=autotune)
@@ -116,7 +132,7 @@ def get_callbacks(checkpoint_path):
         save_best_only=True,            # save only the best model/weights
         verbose=1,                      # show messages
         save_freq='epoch',              # check after every epoch
-        initial_value_threshold=.85,)   # minimum/maximum value for saving
+        initial_value_threshold=.80,)   # minimum/maximum value for saving
     callbacks.append(model_checkpoint_callback)
 
     # Early stopping:
@@ -131,11 +147,6 @@ def get_callbacks(checkpoint_path):
 
     # Tensorboard:
     tensorboard_callback = tf.keras.callbacks.TensorBoard(
-        # 1) Activate anaconda environment for tensorflow (tf_gpu)
-        # 2) Go to folder where tensorflow script is (cd /home/markus/tensorflow/projects/Diagnostic_CNN)
-        # 3) Type into console: tensorboard --logdir logs (<- Folder specified below)
-        # 4) Go to shown URL: http://localhost:6006
-        # 5) Go to "scalars" to see accuracy and loss
         log_dir="logs",             # Directory to store log files
         histogram_freq=0,           # frequency (in epochs) at which to compute activation histograms for the layers of the model
         write_graph=True,           # whether to visualize the graph in Tensorboard
@@ -184,11 +195,11 @@ def lr_scheduler(epoch):
 
 # Function loads a single image for prdictions
 # It also normalizes the image
-def load_img(pth, category, name):
+def load_img(pth, category, name, color_mode):
     # Load image
     img = keras.utils.load_img(
         pth / category / name,
-        color_mode='grayscale', 
+        color_mode=color_mode, 
         target_size=None,
     )
     # Convert PIL object to numpy array
@@ -200,9 +211,9 @@ def load_img(pth, category, name):
     return img
 
 # Function predicts a single image and prints output
-def predict_single_img(model, data_path, subfolder, img_name, class_names):
+def predict_single_img(model, data_path, subfolder, img_name, color_mode, class_names):
     # load image
-    img = load_img(data_path, subfolder, img_name)
+    img = load_img(data_path, subfolder, img_name, color_mode)
     # Predict probabilities: return of a 2D numpy array (why 2D?)
     print(f"Predict class of image \"{img_name}\":")
     probabilities = model.predict(img, verbose=0)
@@ -267,6 +278,25 @@ def plot_confusion_matrix(cm, class_names):
     plt.xlabel('Predicted label')
     plt.tight_layout()
     return figure
+
+def set_growth_and_print_versions(print_versions=True):
+    # Show tensorflow version
+    if(print_versions):
+        print("\n>> Versions:")
+        print("Python: ", sys.version, "")
+        print("TensorFlow: ", tf.__version__, "")
+        print("Keras: ", keras.__version__, "")
+        print("CUDNN: ",tf_build_info.build_info['cudnn_version'])
+        print("CUDA: ",tf_build_info.build_info['cuda_version'])
+    # Optimize memory
+    gpus = tf.config.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+    # List GPUs
+    if(print_versions):
+        print(">> Available GPUs:")
+        for gpu in gpus:
+            print(gpu)    
 
 # Function counts the number of cnn layers in a model
 """

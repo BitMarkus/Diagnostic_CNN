@@ -1,6 +1,8 @@
-logs
-weights
-__pycache__
-dataset
-predictions
-plots
+logs/
+weights/
+__pycache__/
+.vscode/
+dataset/
+predictions/
+plots/
+vis/

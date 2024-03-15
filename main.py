@@ -4,28 +4,18 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from os import listdir
 from os.path import isfile, join
 import tensorflow as tf
-from tensorflow import keras
+import keras
 import pathlib
 import random
 import numpy as np
 # Import own classes and functions
-from vgg19 import vgg_model
-from resnet50 import resnet_model
 from xception import xception_model
-from densenet import densenet_model
 import fcn
 import vis
 import menu
 
-# Optimize memory
-gpus = tf.config.list_physical_devices('GPU')
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
-# List GPUs
-for gpu in gpus:
-    print(gpu)
-# Show tensorflow version
-print("TensorFlow version: ", tf.__version__, "")
+# Set memory growth and print program versions
+fcn.set_growth_and_print_versions(print_versions=True)
 
 # PROGRAM PARAMETERS #
 # Path to dataset
@@ -47,40 +37,28 @@ CLASS_NAMES = fcn.get_class_names(DATA_PTH)
 NUM_CLASSES = len(CLASS_NAMES)
 
 # IMAGE PARAMETERS #
-IMG_HEIGHT = 512   # 442
-IMG_WIDTH = 512    # 550
-IMG_CHANNELS = 1   # Image channels -> Grayscale = 1
+IMG_HEIGHT = 512
+IMG_WIDTH = 512 
+COLOR_MODE = 'rgb'  # Or 'grayscale'
+# Number of channels depending on color mode
+if(COLOR_MODE == 'rgb'):
+    IMG_CHANNELS = 3
+elif(COLOR_MODE == 'grayscale'):
+    IMG_CHANNELS = 1
 IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
-# NETWORK HYPERPARAMETERS #
-SEED = 333                  # 123
-BATCH_SIZE = 32             # 32, for DenseNet201 only 16 works
-VAL_SPLIT = 0.2             # 0.3
-NUM_EPOCHS = 50             # 100 for vgg19, 50 for othet networks
+# NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
+SEED = 222                  # 123
+BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
+VAL_SPLIT = 0.2             # 0.2
+NUM_EPOCHS = 50             # 50
 L2_WEIGHT_DECAY = 0         # 0
 DROPOUT = 0.5               # 0.5
-
-# CHOOSE MODEL #
-MODEL = 'xception' 
-OPT_MOMENTUM = 0.9
-# Choose optimizer and loss function for network architecture
-if(MODEL == 'resnet'):
-    LEARNING_RATE = 0.01     # Is also determined in the learning rate scheduler!
-    OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
-    LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False) # from_logits=False: Softmax on output layer
-elif(MODEL == 'vgg19'):
-    LEARNING_RATE = 0.00001   
-    OPT = optimizer=keras.optimizers.Adam(LEARNING_RATE)
-    LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
-elif(MODEL == 'xception'):
-    LEARNING_RATE = 0.01 
-    OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
-    LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
-elif(MODEL == 'densenet'):
-    LEARNING_RATE = 0.01 
-    OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
-    LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+OPT_MOMENTUM = 0.9          # 0.9
+LEARNING_RATE = 0.01        # 0.01
+OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
+LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 
 #############
 # Main Menu #
@@ -110,15 +88,7 @@ while(True):
             print("A network already exists!")
         else:
             print("Creating new network...")
-            # Selection of network architecture
-            if(MODEL == 'resnet'):
-                model = resnet_model(IMG_SHAPE, DROPOUT, NUM_CLASSES)
-            elif(MODEL == 'vgg19'):
-                model = vgg_model(IMG_SHAPE, DROPOUT, L2_WEIGHT_DECAY, NUM_CLASSES)   
-            elif(MODEL == 'xception'):
-                model = xception_model(IMG_SHAPE, NUM_CLASSES)    
-            elif(MODEL == 'densenet'):
-                model = densenet_model(IMG_SHAPE, NUM_CLASSES)          
+            model = xception_model(IMG_SHAPE, NUM_CLASSES)       
             print("New network finished.")
 
     ########################
@@ -140,12 +110,12 @@ while(True):
         print("\n:LOAD TRAINING DATA:")  
         print("Classes: ", CLASS_NAMES)   
         # Get training, validation and test data
-        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, VAL_SPLIT, SEED, CLASS_NAMES) 
+        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, VAL_SPLIT, SEED, CLASS_NAMES) 
         # Data tuning
         AUTOTUNE = tf.data.AUTOTUNE
         ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test, AUTOTUNE)
-        # Data augmentation
-        ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)               
+        # Data augmentation -> Flipping the image is not helpful because of the orientation of the DIC images
+        # ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)               
         
     #################
     # Train Network #  
@@ -190,7 +160,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "xception_checkpoint-36-0.92_8cl.weights.h5"
+        chkpt = "checkpoint-16-0.92_2cl_training_4_s222.weights.h5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
@@ -225,7 +195,7 @@ while(True):
                     # print(choice_list)
                     # Make predictions
                     for pred_img in choice_list:
-                        fcn.predict_single_img(model, PRED_PTH, subfolder, pred_img, CLASS_NAMES)
+                        fcn.predict_single_img(model, PRED_PTH, subfolder, pred_img, COLOR_MODE, CLASS_NAMES)
                 else:
                     print(f"Not enough images in folder (max {len(folder_list)})!")     
             else:
@@ -241,7 +211,7 @@ while(True):
             print('No network generated yet!')
         else:
             # Get dataset for prediction
-            ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH)
+            ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
             AUTOTUNE = tf.data.AUTOTUNE
             ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)
             # Compile model
@@ -260,7 +230,7 @@ while(True):
             
     elif(menu1 == 8):
         # Get dataset for prediction
-        ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, CLASS_NAMES)
+        ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
         AUTOTUNE = tf.data.AUTOTUNE
         ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)
         # Get predictions and labels for the test dataset
