@@ -17,25 +17,6 @@ import menu
 # Set memory growth and print program versions
 fcn.set_growth_and_print_versions(print_versions=True)
 
-# PROGRAM PARAMETERS #
-# Path to dataset
-DATA_PTH = pathlib.Path('dataset/')
-# Path for saved weights
-WGHT_PTH = pathlib.Path("weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.weights.h5")
-# Path for tensorboard logs
-LOG_PTH = pathlib.Path("logs/")
-# Path auto save the plots at the end of the training
-PLOT_PTH = pathlib.Path("plots/") 
-# Path for visualizations
-VIS_PTH = pathlib.Path("vis/")
-# Path for prediction images
-PRED_PTH = pathlib.Path("predictions/")
-
-# CLASS PARAMETERS #
-# Class names according to the folder structure in the prediction folder 
-CLASS_NAMES = fcn.get_class_names(DATA_PTH)
-NUM_CLASSES = len(CLASS_NAMES)
-
 # IMAGE PARAMETERS #
 IMG_HEIGHT = 512
 IMG_WIDTH = 512 
@@ -59,6 +40,25 @@ OPT_MOMENTUM = 0.9          # 0.9
 LEARNING_RATE = 0.01        # 0.01
 OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
 LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+
+# PROGRAM PARAMETERS #
+# Path to dataset
+DATA_PTH = pathlib.Path('dataset/')
+# Path for saved weights
+WGHT_PTH = pathlib.Path("weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.weights.h5")
+# Path for tensorboard logs
+LOG_PTH = pathlib.Path("logs/")
+# Path auto save the plots at the end of the training
+PLOT_PTH = pathlib.Path("plots/") 
+# Path for visualizations
+VIS_PTH = pathlib.Path("vis/")
+# Path for prediction images
+PRED_PTH = pathlib.Path("predictions/")
+
+# CLASS PARAMETERS #
+# Class names according to the folder structure in the prediction folder 
+CLASS_NAMES = fcn.get_class_names(DATA_PTH)
+NUM_CLASSES = len(CLASS_NAMES)
 
 #############
 # Main Menu #
