@@ -54,8 +54,10 @@ LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 # PROGRAM PARAMETERS #
 # Path to dataset
 DATA_PTH = pathlib.Path('dataset/')
-# Path for saved weights
-WGHT_PTH = pathlib.Path("weights/checkpoint-{epoch:02d}-{val_accuracy:.2f}.weights.h5")
+# Path for checkpoints folder
+CHKPT_PTH = pathlib.Path('chkpt/')
+# Path for saving checkpoints including file name
+CHKPT_FILE_PTH = pathlib.Path(CHKPT_PTH / "checkpoint-{epoch:02d}-{val_accuracy:.2f}.weights.h5")
 # Path for tensorboard logs
 LOG_PTH = pathlib.Path("logs/")
 # Path auto save the plots at the end of the training
@@ -64,6 +66,8 @@ PLOT_PTH = pathlib.Path("plots/")
 VIS_PTH = pathlib.Path("vis/")
 # Path for prediction images
 PRED_PTH = pathlib.Path("predictions/")
+# File extension for saved checkpoints
+CHKPT_EXT = ".weights.h5"
 
 # CLASS PARAMETERS #
 # Class names according to the subfolder structure in the data (and prediction) folder 
@@ -80,7 +84,7 @@ while(True):
     print("2) Show Network Summary")
     print("3) Load Training Data")
     print("4) Train Network")
-    print("5) Load Model")
+    print("5) Load Checkpoint")
     print("6) Predict random Images in Folder")
     print("7) Predict all Images in Folder")
     print("8) Plot confusion matrix")
@@ -148,7 +152,7 @@ while(True):
             )
 
             # Get list with callbacks
-            callback_list = fcn.get_callbacks(CALLBACKS_ENABLE, WGHT_PTH, SAVING_THRESHOLD)
+            callback_list = fcn.get_callbacks(CALLBACKS_ENABLE, CHKPT_FILE_PTH, SAVING_THRESHOLD)
 
             # Train model
             train_history = model.fit(
@@ -169,16 +173,22 @@ while(True):
     ##############
 
     elif(menu1 == 5):
-        # Choose checkpoint
-        chkpt = "checkpoint-23-0.81.weights.h5"
         # Load checkpoint weights
-        print("\n:LOAD MODEL:") 
+        print("\n:LOAD CHECKPOINT:") 
         if('model' not in globals()):
             print('No network generated yet!')
         else:
-            model.load_weights(f"weights/{chkpt}")
-            print("Import of weights finished.")
-     
+            # Choose checkpoint
+            inp = str(menu.input_empty("Enter checkpoint name (without extension): "))
+            chkpt_import_path = CHKPT_PTH / (str(inp) + str(CHKPT_EXT))
+            # print(chkpt_import_path)
+            # Check if checkpoint file is in the weights/ folder
+            if(os.path.exists(chkpt_import_path)):
+                model.load_weights(chkpt_import_path)
+                print("Import of weights finished.")
+            else:
+                print(f"Checkpoint file {chkpt_import_path} not found!") 
+
     #####################################
     # Predict random images in a folder #
     #####################################

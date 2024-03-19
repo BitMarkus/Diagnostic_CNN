@@ -17,7 +17,7 @@ After cloning the repository the following folders need to be created in the pro
 - plots/: Folder for plots. E.g. training/validation accuracy and loss as well as the learning rate are saved automatically as a plot at the end of a training.
 - predictions/: This is the folder for images to predict. It should have the same subfolders as the dataset/ folder. Using the images in this folder, a confusion matrix can be generated.
 - vis/: Currently not used. This folder was for saving vizualized cnn filters and feature maps. The source code for these visualizations can be found in the file vis.py, but it is currently not used.
-- weights/: Here, checkpoints are stored during training. Checkpoint saving starts, when validatin accuracy is over 80%. Then, only checkpoints with a higher accuracy than already saved ones will be saved.
+- chkpt/: Here, checkpoints are stored during training. Checkpoint saving starts, when validatin accuracy is over 80% (can be adjusted). Then, only checkpoints with a higher accuracy than already saved ones will be saved.
 
 The folder models/ is not relevant as it contains the source code for implementing DensNet, ResNet and VGG networks. It is just for testing other CNN architectures.
 
@@ -26,7 +26,7 @@ The program has a menu with the following options:
 - Show Network Summary
 - Load Training Data: Three groups will be generated. 1) Training images: for training the network (70% of all images, validation split can be configured). 2) Validatioon images: To check training progress after each epoch (10%). 3) Test images: to check training success after training is finished.
 - Train network: In order to do that, a network needs to be initialized and training images nedd to be loaded first.
-- Load model: Loads a saved checkpoint
+- Load checkpoint: Loads a saved checkpoint
 - Predict random Images in Folder: A subfolder in the prediction/ folder needs to be specified and the amount of images to predict. Then random images will be choosen and the prediction result will be displayed.
 - Predict all Images in Folder: Predicts all images in a folder
 - Plot confusion matrix: After training or loading a checkpoint, all images in the folder prediction/ will be predicted an a confusion matrix will be plotted.

@@ -1,5 +1,5 @@
 logs/
-weights/
+chkpt/
 __pycache__/
 .vscode/
 dataset/

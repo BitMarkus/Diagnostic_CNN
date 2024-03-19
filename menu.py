@@ -8,7 +8,6 @@
 def input_empty(prompt):
     while(True):
         inp = input(prompt).strip()
-        # print(len(inp))
         if(len(inp) == 0):
             print("No Input! Try again:")
         else:
