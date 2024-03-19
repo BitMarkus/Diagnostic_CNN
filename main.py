@@ -8,6 +8,7 @@ import keras
 import pathlib
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 # Import own classes and functions
 from xception import xception_model
 import fcn
@@ -29,17 +30,26 @@ elif(COLOR_MODE == 'grayscale'):
 IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
+# CALLBACK PARAMETER #
+# Enable or disable callbacks
+CALLBACKS_ENABLE = {"save_ckpt": True, "early_stop": False, "tensorboard": True, "lr_scheduler": True}
+# Minimum validation accuracy from which on checkpoints will be saved
+SAVING_THRESHOLD = 0.8
+
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
 SEED = 222                  # 123
 BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
 VAL_SPLIT = 0.2             # 0.2
 NUM_EPOCHS = 50             # 50
-L2_WEIGHT_DECAY = 0         # 0
-DROPOUT = 0.5               # 0.5
 OPT_MOMENTUM = 0.9          # 0.9
-LEARNING_RATE = 0.01        # 0.01
+# Learning rate:
+# If the lr callback isn't disabled, the lr is determined by the learning rate scheduler!
+# Or else the following value is used during the whole training:
+LEARNING_RATE = 0.01        # 0.01 for SGD, 0.00001 for ADAM     
 OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
 LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+# L2_WEIGHT_DECAY = 0       -> Currently not in use
+# DROPOUT = 0.5             -> Currently not in use 
 
 # PROGRAM PARAMETERS #
 # Path to dataset
@@ -54,11 +64,9 @@ PLOT_PTH = pathlib.Path("plots/")
 VIS_PTH = pathlib.Path("vis/")
 # Path for prediction images
 PRED_PTH = pathlib.Path("predictions/")
-# Minimum validation accuracy from which on checkpoints will be saved
-SAVING_THRESHOLD = 0.8
 
 # CLASS PARAMETERS #
-# Class names according to the folder structure in the prediction folder 
+# Class names according to the subfolder structure in the data (and prediction) folder 
 CLASS_NAMES = fcn.get_class_names(DATA_PTH)
 NUM_CLASSES = len(CLASS_NAMES)
 
@@ -140,7 +148,7 @@ while(True):
             )
 
             # Get list with callbacks
-            callback_list = fcn.get_callbacks(WGHT_PTH, SAVING_THRESHOLD)
+            callback_list = fcn.get_callbacks(CALLBACKS_ENABLE, WGHT_PTH, SAVING_THRESHOLD)
 
             # Train model
             train_history = model.fit(
@@ -162,7 +170,7 @@ while(True):
 
     elif(menu1 == 5):
         # Choose checkpoint
-        chkpt = "checkpoint-16-0.92_2cl_training_4_s222.weights.h5"
+        chkpt = "checkpoint-23-0.81.weights.h5"
         # Load checkpoint weights
         print("\n:LOAD MODEL:") 
         if('model' not in globals()):
@@ -252,9 +260,8 @@ while(True):
                 labels = np.concatenate([y for x, y in ds_pred], axis=0)
                 # Create confusion matrix and normalizes it over predicted (columns)
                 # Make a numpy array of the matrix data
-                result = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
-                conf_matr = fcn.plot_confusion_matrix(result, CLASS_NAMES)
-                conf_matr.show()                
+                cm_result = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
+                vis.plot_confusion_matrix(cm_result, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True)             
 
     ################
     # Exit Program #
@@ -270,4 +277,4 @@ while(True):
 
 # Last line in main program to keep plots open after program execution is finished
 # see function show_plot_exec() in vis.py
-# plt.show()
+plt.show()

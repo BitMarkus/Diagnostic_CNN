@@ -120,47 +120,50 @@ def tune_pred_img(ds_pred, autotune):
     return ds_pred
 
 # Function for callbacks
-def get_callbacks(checkpoint_path, saving_th):
+def get_callbacks(callbacks_enable, checkpoint_path, saving_th):
+    # Create empty list for callbacks
     callbacks = []
     
     # Save best weights as checkpoint (highest validation accuracy):
-    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_path,               # Path to checkpoint file (not only folder)
-        save_weights_only=True,                 # False = whole model will be saved
-        monitor='val_accuracy',                 # Value to monitor
-        mode='max',                             # max, min, auto fpr value to monitor
-        save_best_only=True,                    # save only the best model/weights
-        verbose=1,                              # show messages
-        save_freq='epoch',                      # check after every epoch
-        initial_value_threshold=saving_th,)     # minimum/maximum value for saving
-    callbacks.append(model_checkpoint_callback)
+    if(callbacks_enable["save_ckpt"]):
+        model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath=checkpoint_path,               # Path to checkpoint file (not only folder)
+            save_weights_only=True,                 # False = whole model will be saved
+            monitor='val_accuracy',                 # Value to monitor
+            mode='max',                             # max, min, auto fpr value to monitor
+            save_best_only=True,                    # save only the best model/weights
+            verbose=1,                              # show messages
+            save_freq='epoch',                      # check after every epoch
+            initial_value_threshold=saving_th,)     # minimum/maximum value for saving
+        callbacks.append(model_checkpoint_callback)
 
     # Early stopping:
-    """
-    early_stopping_callback = tf.keras.callbacks.EarlyStopping(
-        monitor='val_accuracy', 
-        patience=20,            # 10-15
-        start_from_epoch=40     # 40
-    )
-    callbacks.append(early_stopping_callback)
-    """
+    if(callbacks_enable["early_stop"]):
+        early_stopping_callback = tf.keras.callbacks.EarlyStopping(
+            monitor='val_accuracy', 
+            patience=20,            # 10-15
+            start_from_epoch=40     # 40
+        )
+        callbacks.append(early_stopping_callback)
 
     # Tensorboard:
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(
-        log_dir="logs",             # Directory to store log files
-        histogram_freq=0,           # frequency (in epochs) at which to compute activation histograms for the layers of the model
-        write_graph=True,           # whether to visualize the graph in Tensorboard
-        write_images=False,         # whether to write model weights to visualize as image in Tensorboard
-        update_freq="epoch",        # 'batch' or 'epoch' or integer.
-    )
-    callbacks.append(tensorboard_callback)
+    if(callbacks_enable["tensorboard"]):
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(
+            log_dir="logs",             # Directory to store log files
+            histogram_freq=0,           # frequency (in epochs) at which to compute activation histograms for the layers of the model
+            write_graph=True,           # whether to visualize the graph in Tensorboard
+            write_images=False,         # whether to write model weights to visualize as image in Tensorboard
+            update_freq="epoch",        # 'batch' or 'epoch' or integer.
+        )
+        callbacks.append(tensorboard_callback)
 
     # Learning rate scheduler: reduces learning rate dependent on epoch index -> own function!
-    lr_scheduler_callback = tf.keras.callbacks.LearningRateScheduler(
-        lr_scheduler, 
-        verbose=1
-    )
-    callbacks.append(lr_scheduler_callback)
+    if(callbacks_enable["lr_scheduler"]):
+        lr_scheduler_callback = tf.keras.callbacks.LearningRateScheduler(
+            lr_scheduler, 
+            verbose=1
+        )
+        callbacks.append(lr_scheduler_callback)
 
     return callbacks
 
@@ -251,33 +254,6 @@ def get_class_names(data_dir):
     # sort list alphabetically
     class_list.sort()
     return class_list
-
-# Returns a matplotlib figure containing the plotted confusion matrix
-# https://www.tensorflow.org/tensorboard/image_summaries
-# cm (array, shape = [n, n]): a confusion matrix of integer classes
-# class_names (array, shape = [n]): String names of the integer classes
-def plot_confusion_matrix(cm, class_names):
-    figure = plt.figure(figsize=(8, 8))
-    img = plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title("Confusion matrix")
-    plt.colorbar(img)
-    tick_marks = np.arange(len(class_names))
-    plt.xticks(tick_marks, class_names, rotation=45)
-    plt.yticks(tick_marks, class_names)
-
-    # Compute the labels from the normalized confusion matrix.
-    labels = np.around((cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]) * 100, decimals=1)
-
-    # Use white text if squares are dark; otherwise black.
-    threshold = cm.max() / 2.
-    for i, j in product(range(cm.shape[0]), range(cm.shape[1])):
-        color = "white" if cm[i, j] > threshold else "black"
-        plt.text(j, i, labels[i, j], horizontalalignment="center", color=color)
-   
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.tight_layout()
-    return figure
 
 def set_growth_and_print_versions(print_versions=True):
     # Show tensorflow version

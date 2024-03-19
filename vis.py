@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 from tensorflow import keras
+import numpy as np
+from itertools import product
 import math
 import os
 from datetime import datetime
@@ -232,6 +234,43 @@ def plot_img_batch(batch_size, ds, vis_path, show_plot=True, save_plot=False):
     filename = f'batch0_dataset'
     if(save_plot):
         plt.savefig(str(vis_path) + '/' + filename, bbox_inches='tight')
+    # Show plot
+    if(show_plot):
+        show_plot_exec()
+
+# Returns a matplotlib figure containing the plotted confusion matrix
+# https://www.tensorflow.org/tensorboard/image_summaries
+# cm (array, shape = [n, n]): a confusion matrix of integer classes
+# class_names (array, shape = [n]): String names of the integer classes
+def plot_confusion_matrix(cm, class_names, plot_path, show_plot=True, save_plot=False):
+    figure = plt.figure(figsize=(8, 8))
+    img = plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title("Confusion matrix")
+    plt.colorbar(img)
+    tick_marks = np.arange(len(class_names))
+    plt.xticks(tick_marks, class_names, rotation=45)
+    plt.yticks(tick_marks, class_names)
+
+    # Compute the labels from the normalized confusion matrix.
+    labels = np.around((cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]) * 100, decimals=1)
+
+    # Use white text if squares are dark; otherwise black.
+    threshold = cm.max() / 2.
+    for i, j in product(range(cm.shape[0]), range(cm.shape[1])):
+        color = "white" if cm[i, j] > threshold else "black"
+        plt.text(j, i, labels[i, j], horizontalalignment="center", color=color)
+   
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+
+    # Save plot
+    # Get date and time
+    date_time = datetime.now().strftime("%Y_%m_%d-%H_%M")
+    # Generate filename
+    filename = f"confusion_matrix_{date_time}.png"
+    if(save_plot):
+        plt.savefig(str(plot_path) + '/' + filename, bbox_inches='tight')
     # Show plot
     if(show_plot):
         show_plot_exec()
