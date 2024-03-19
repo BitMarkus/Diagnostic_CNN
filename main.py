@@ -37,7 +37,7 @@ CALLBACKS_ENABLE = {"save_ckpt": True, "early_stop": False, "tensorboard": True,
 SAVING_THRESHOLD = 0.8
 
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
-SEED = 222                  # 123
+SEED = 123                  # 123
 BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
 VAL_SPLIT = 0.2             # 0.2
 NUM_EPOCHS = 50             # 50
