@@ -26,7 +26,7 @@ def get_ds(data_dir, batch_size, img_height, img_width, color_mode, val_split, s
         labels='inferred',                      # lables are taken from subfolder names
         label_mode="int",                       # OR categorical, binary
         class_names=class_names, 
-        color_mode=color_mode,                       # grayscale OR rgb
+        color_mode=color_mode,                  # grayscale OR rgb
         batch_size=batch_size,
         image_size=(img_height, img_width),     # images will be reshaped if not in this size
         shuffle=True,
@@ -120,19 +120,19 @@ def tune_pred_img(ds_pred, autotune):
     return ds_pred
 
 # Function for callbacks
-def get_callbacks(checkpoint_path):
+def get_callbacks(checkpoint_path, saving_th):
     callbacks = []
     
     # Save best weights as checkpoint (highest validation accuracy):
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_path,       # Path to checkpoint file (not only folder)
-        save_weights_only=True,         # False = whole model will be saved
-        monitor='val_accuracy',         # Value to monitor
-        mode='max',                     # max, min, auto fpr value to monitor
-        save_best_only=True,            # save only the best model/weights
-        verbose=1,                      # show messages
-        save_freq='epoch',              # check after every epoch
-        initial_value_threshold=.80,)   # minimum/maximum value for saving
+        filepath=checkpoint_path,               # Path to checkpoint file (not only folder)
+        save_weights_only=True,                 # False = whole model will be saved
+        monitor='val_accuracy',                 # Value to monitor
+        mode='max',                             # max, min, auto fpr value to monitor
+        save_best_only=True,                    # save only the best model/weights
+        verbose=1,                              # show messages
+        save_freq='epoch',                      # check after every epoch
+        initial_value_threshold=saving_th,)     # minimum/maximum value for saving
     callbacks.append(model_checkpoint_callback)
 
     # Early stopping:

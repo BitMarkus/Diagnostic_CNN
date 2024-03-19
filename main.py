@@ -54,6 +54,8 @@ PLOT_PTH = pathlib.Path("plots/")
 VIS_PTH = pathlib.Path("vis/")
 # Path for prediction images
 PRED_PTH = pathlib.Path("predictions/")
+# Minimum validation accuracy from which on checkpoints will be saved
+SAVING_THRESHOLD = 0.8
 
 # CLASS PARAMETERS #
 # Class names according to the folder structure in the prediction folder 
@@ -138,7 +140,7 @@ while(True):
             )
 
             # Get list with callbacks
-            callback_list = fcn.get_callbacks(WGHT_PTH)
+            callback_list = fcn.get_callbacks(WGHT_PTH, SAVING_THRESHOLD)
 
             # Train model
             train_history = model.fit(
