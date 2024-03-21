@@ -18,7 +18,7 @@ After cloning the repository the following folders need to be created in the pro
 - predictions/: This is the folder for images to predict. It should have the same subfolders as the dataset/ folder. Using the images in this folder, a confusion matrix can be generated.
 - vis/: Currently not used. This folder was for saving vizualized cnn filters and feature maps. The source code for these visualizations can be found in the file vis.py, but it is currently not used.
 - chkpt/: Here, checkpoints are stored during training. Checkpoint saving starts, when validatin accuracy is over 80% (can be adjusted). Then, only checkpoints with a higher accuracy than already saved ones will be saved.
-- cache/: When training on a lot of images, the cached dataset might not fit into memory. That's why cached data is stored in the cache/ folder. When training on a new dataset, the constant CLEAR_CACHE must be set to True. In this case, old cashed data is automatically deleted from the cache/ folder before the new training starts. If the cache is not cleared, only the cached data will be used for training and images in the dataset/ folder will be ignored!
+- cache/: When training on a lot of images, the cached dataset might not fit into memory. That's why cached data is stored in the cache/ folder. When training on a new dataset, the constant CLEAR_CACHE must be set to True. In this case, old cashed data is automatically deleted from the cache/ folder before the new training starts. Cachin the training dataset is optional (constant CACH_DS True or False) and will increase training time.
 
 The folder models/ is not relevant as it contains the source code for implementing DensNet, ResNet and VGG networks. It is just for testing other CNN architectures.
 

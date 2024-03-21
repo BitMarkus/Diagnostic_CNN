@@ -96,7 +96,7 @@ def augment_img(image, label):
     return image, label
 
 # Function for data tuning
-def tune_img(ds_train, ds_validation, ds_test, cache_pth, cache_name):
+def tune_img(ds_train, ds_validation, ds_test, cache_ds, cache_pth, cache_name):
     # Prepare dataset and configure dataset for performance
     # Setup for training dataset:
     ds_train = ds_train.map(normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
@@ -106,7 +106,8 @@ def tune_img(ds_train, ds_validation, ds_test, cache_pth, cache_name):
     # When caching to a file, the cached data will persist across runs.
     # Even the first iteration through the data will read from the cache file!!!
     # See also: https://www.tensorflow.org/datasets/performances
-    ds_train = ds_train.cache(str(cache_pth) + '/' + cache_name)
+    if(cache_ds):
+        ds_train = ds_train.cache(str(cache_pth) + '/' + cache_name)
     ds_train = ds_train.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     # Setup for validation dataset:
     ds_validation = ds_validation.map(normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
