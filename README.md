@@ -18,13 +18,14 @@ After cloning the repository the following folders need to be created in the pro
 - predictions/: This is the folder for images to predict. It should have the same subfolders as the dataset/ folder. Using the images in this folder, a confusion matrix can be generated.
 - vis/: Currently not used. This folder was for saving vizualized cnn filters and feature maps. The source code for these visualizations can be found in the file vis.py, but it is currently not used.
 - chkpt/: Here, checkpoints are stored during training. Checkpoint saving starts, when validatin accuracy is over 80% (can be adjusted). Then, only checkpoints with a higher accuracy than already saved ones will be saved.
+- cache/: When training on a lot of images, the cached dataset might not fit into memory. That's why cached data is stored in the cache/ folder. When training on a new dataset, the constant CLEAR_CACHE must be set to True. In this case, old cashed data is automatically deleted from the cache/ folder before the new training starts. If the cache is not cleared, only the cached data will be used for training and images in the dataset/ folder will be ignored!
 
 The folder models/ is not relevant as it contains the source code for implementing DensNet, ResNet and VGG networks. It is just for testing other CNN architectures.
 
 The program has a menu with the following options:
 - Create CNN Network: Creates a Xception network taking an input tensor of 512x512x3 and randomly initiates weights and biases
 - Show Network Summary
-- Load Training Data: Three groups will be generated. 1) Training images: for training the network (70% of all images, validation split can be configured). 2) Validatioon images: To check training progress after each epoch (10%). 3) Test images: to check training success after training is finished.
+- Load Training Data: Three groups will be generated. 1) Training images: for training the network (70% of all images, validation split can be configured). 2) Validation images: To check training progress after each epoch (10%). 3) Test images: to check training success after training is finished.
 - Train network: In order to do that, a network needs to be initialized and training images nedd to be loaded first.
 - Load checkpoint: Loads a saved checkpoint
 - Predict random Images in Folder: A subfolder in the prediction/ folder needs to be specified and the amount of images to predict. Then random images will be choosen and the prediction result will be displayed.
@@ -39,3 +40,4 @@ TensorFlow:  2.15.0
 Keras:  3.0.5 
 CUDNN:  8
 CUDA:  12.2
+NVIDIA RTX 4090 or NVIDIA RTX A5000 (24 GB VRAM)

@@ -1,8 +1,9 @@
-logs/
-chkpt/
-__pycache__/
-.vscode/
-dataset/
-predictions/
-plots/
-vis/
+/__pycache__
+/.vscode
+/cache
+/chkpt
+/dataset
+/plots
+/predictions
+/logs
+/vis

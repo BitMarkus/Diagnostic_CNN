@@ -18,6 +18,10 @@ import menu
 # Set memory growth and print program versions
 fcn.set_growth_and_print_versions(print_versions=True)
 
+#########################
+# DELETE CACHE FILE !!! #
+#########################
+
 # IMAGE PARAMETERS #
 IMG_HEIGHT = 512
 IMG_WIDTH = 512 
@@ -37,10 +41,10 @@ CALLBACKS_ENABLE = {"save_ckpt": True, "early_stop": False, "tensorboard": True,
 SAVING_THRESHOLD = 0.8
 
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
-SEED = 123                  # 123
+SEED = 111                  # 123
 BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
-VAL_SPLIT = 0.2             # 0.2
-NUM_EPOCHS = 50             # 50
+VAL_SPLIT = 0.2            # 0.2
+NUM_EPOCHS = 15             # 50; with a lot of training images (> 10,000), even 10 epochs are enough
 OPT_MOMENTUM = 0.9          # 0.9
 # Learning rate:
 # If the lr callback isn't disabled, the lr is determined by the learning rate scheduler!
@@ -66,6 +70,10 @@ PLOT_PTH = pathlib.Path("plots/")
 VIS_PTH = pathlib.Path("vis/")
 # Path for prediction images
 PRED_PTH = pathlib.Path("predictions/")
+# Path to cached datasets
+CACHE_PTH = pathlib.Path("cache/")
+# Name for cached dataset
+CACHE_NAME = "ds.cache"
 # File extension for saved checkpoints
 CHKPT_EXT = ".weights.h5"
 
@@ -73,6 +81,12 @@ CHKPT_EXT = ".weights.h5"
 # Class names according to the subfolder structure in the data (and prediction) folder 
 CLASS_NAMES = fcn.get_class_names(DATA_PTH)
 NUM_CLASSES = len(CLASS_NAMES)
+
+# OTHER PARAMETERS #
+# Parameter to clear cached old datasets from the cache/ folder
+# If the same dataset is trained as before, set it to False
+# When the dataset is changed, set it to True
+CLEAR_CACHE = True
 
 #############
 # Main Menu #
@@ -126,10 +140,9 @@ while(True):
         # Get training, validation and test data
         ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, VAL_SPLIT, SEED, CLASS_NAMES) 
         # Data tuning
-        AUTOTUNE = tf.data.AUTOTUNE
-        ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test, AUTOTUNE)
+        ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test, CACHE_PTH, CACHE_NAME)
         # Data augmentation -> Flipping the image is not helpful because of the orientation of the DIC images
-        # ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=AUTOTUNE)               
+        # ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=tf.data.AUTOTUNE)               
         
     #################
     # Train Network #  
@@ -143,6 +156,10 @@ while(True):
         elif('ds_train' not in globals()):
             print('No training data loaded yet!')
         else:
+            # Clear cache folder from old cached datasets
+            if(CLEAR_CACHE):
+                fcn.clear_ds_cache(CACHE_PTH)
+
             # Compile model
             model.compile(
                 # from_logits=False: Softmax on output layer
@@ -232,8 +249,7 @@ while(True):
         else:
             # Get dataset for prediction
             ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
-            AUTOTUNE = tf.data.AUTOTUNE
-            ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)
+            ds_pred = fcn.tune_pred_img(ds_pred)
             # Compile model
             model.compile(
                 # from_logits=False: Softmax on output layer
@@ -260,8 +276,7 @@ while(True):
             else:
                 # Get dataset for prediction
                 ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
-                AUTOTUNE = tf.data.AUTOTUNE
-                ds_pred = fcn.tune_pred_img(ds_pred, AUTOTUNE)
+                ds_pred = fcn.tune_pred_img(ds_pred)
                 # Get predictions and labels for the test dataset
                 # https://stackoverflow.com/questions/64687375/get-labels-from-dataset-when-using-tensorflow-image-dataset-from-directory
                 predictions = np.array([])

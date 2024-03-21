@@ -13,10 +13,13 @@ import tensorflow as tf
 from tensorflow.python.platform import build_info as tf_build_info
 import keras
 import sys
-import matplotlib.pyplot as plt
-from itertools import product
+# import matplotlib.pyplot as plt
+# from itertools import product
 import os
+import glob
 import numpy as np
+import shutil
+from pathlib import Path
 
 # Prepare training, validation and test dataset
 def get_ds(data_dir, batch_size, img_height, img_width, color_mode, val_split, seed, class_names):
@@ -93,30 +96,30 @@ def augment_img(image, label):
     return image, label
 
 # Function for data tuning
-def tune_img(ds_train, ds_validation, ds_test, autotune):
+def tune_img(ds_train, ds_validation, ds_test, cache_pth, cache_name):
     # Prepare dataset and configure dataset for performance
     # Setup for training dataset:
-    ds_train = ds_train.map(normalize_img, num_parallel_calls=autotune)
-    # Caching could be the problem why the program can't train on more than 20.000 images
-    # https://www.tensorflow.org/tutorials/load_data/images
-    # Dataset.cache keeps the images in memory after they're loaded off disk during the first epoch
-    ds_train = ds_train.cache() 
-    ds_train = ds_train.prefetch(buffer_size=autotune)
+    ds_train = ds_train.map(normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
+    # With caching to memory the program can't train on more than 20.000 images (OOM)
+    # Instead the cached dataset is written to the cache_pth path
+    # See: https://www.tensorflow.org/api_docs/python/tf/data/Dataset
+    # When caching to a file, the cached data will persist across runs.
+    # Even the first iteration through the data will read from the cache file!!!
+    # See also: https://www.tensorflow.org/datasets/performances
+    ds_train = ds_train.cache(str(cache_pth) + '/' + cache_name)
+    ds_train = ds_train.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     # Setup for validation dataset:
-    ds_validation = ds_validation.map(normalize_img, num_parallel_calls=autotune)
-    ds_validation = ds_validation.cache() # Is this necessary here?
-    ds_validation = ds_validation.prefetch(buffer_size=autotune)
+    ds_validation = ds_validation.map(normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_validation = ds_validation.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     # Setup for test dataset:
-    ds_test = ds_test.map(normalize_img, num_parallel_calls=autotune)
-    ds_test = ds_test.cache()
-    ds_test = ds_test.prefetch(buffer_size=autotune)
+    ds_test = ds_test.map(normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_test = ds_test.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     return ds_train, ds_validation, ds_test
 
-def tune_pred_img(ds_pred, autotune):
+def tune_pred_img(ds_pred):
     # Prepare prediction dataset and configure it for performance
-    ds_pred = ds_pred.map(normalize_img, num_parallel_calls=autotune)
-    ds_pred = ds_pred.cache()
-    ds_pred = ds_pred.prefetch(buffer_size=autotune)
+    ds_pred = ds_pred.map(normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
+    ds_pred = ds_pred.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     return ds_pred
 
 # Function for callbacks
@@ -172,6 +175,19 @@ def get_callbacks(callbacks_enable, checkpoint_path, saving_th):
 def lr_scheduler(epoch):
     # SGD optimizer
     learning_rate = 0.01
+    if epoch >= 2:
+        learning_rate = 0.005
+    if epoch >= 5:
+        learning_rate = 0.001
+    if epoch >= 8:
+        learning_rate = 0.0005
+    if epoch >= 11:
+        learning_rate = 0.0001
+    if epoch >= 12:
+        learning_rate = 0.00005
+    """
+    # Old SGD optimizer for grayscale images
+    learning_rate = 0.01
     if epoch >= 10:
         learning_rate = 0.005
     if epoch >= 20:
@@ -182,6 +198,7 @@ def lr_scheduler(epoch):
         learning_rate = 0.0001
     if epoch >= 45:
         learning_rate = 0.00005
+    """
     """ 
     # ADAM optimizer
     learning_rate = 0.00001
@@ -272,19 +289,43 @@ def set_growth_and_print_versions(print_versions=True):
     if(print_versions):
         print(">> Available GPUs:")
         for gpu in gpus:
-            print(gpu)    
+            print(gpu) 
 
-# Function counts the number of cnn layers in a model
+# Function detetes all files in the cache folder
+# in order to remove old chached datasets
+def clear_ds_cache(cache_pth):
+    cache_file = str(cache_pth) + '/*'
+    # print(cache_file)
+    files = glob.glob(cache_file)
+    for f in files:
+        os.remove(f)
+        # print(f)
+    print("\nCached datasets removed!")
+    return True
+
 """
+# utility function to get rid of directories containing lock files
+# https://github.com/tensorflow/tensorflow/issues/18266
+def delete_trailing_lock_files(cache_root):
+  lock_file_dirs = {}
+  for filename in Path(cache_root).glob('**/*.lock*'):
+    lock_file_dirs[os.path.split(filename)[0] + '/'] = ''
+  for dir in lock_file_dirs.keys():
+    try:
+      shutil.rmtree(dir)
+    except:
+      print('failed removing dir', filename)
+"""
+"""
+# Function counts the number of cnn layers in a model
 def num_cnn_layers(model):
     count = 0
     for _, layer in enumerate(model.layers):
         if 'cnn' in layer.name: 
             count += 1
     return count
-"""
+
 # Convert RGB image to grayscale
-"""
 def rgb_to_gray_img(image, label):
     img = tf.image.rgb_to_grayscale(image)
     return img, label
