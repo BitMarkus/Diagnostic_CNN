@@ -82,14 +82,18 @@ CHKPT_EXT = ".weights.h5"
 CLASS_NAMES = fcn.get_class_names(DATA_PTH)
 NUM_CLASSES = len(CLASS_NAMES)
 
-# OTHER PARAMETERS #
+# CACHE PARAMETERS #
 # Parameter to determine if training dataset is suppose to be cached
-# Caching the dataset makes training faster, but it requires a lot of dard disk space
+# If the dataset is big, caching needs to be done to the HDD or else you ran out of RAM
+# Caching the dataset makes training faster, but it requires a lot of hard disk space or RAM
 CACHE_DS = True
+# Parameter determines if data is cached to memory or hard disk drive
+# True: data is cached as a file on the hard disk drive, False: cached to RAM
+CACHE_ON_DRIVE = True
 # Parameter to clear cached old datasets from the cache/ folder
 # If the same dataset is trained as before, set it to False
 # When the dataset is changed, set it to True
-# Only of importance, if CACHE_DS is set to True
+# Only of importance, if CACHE_DS and CACHE_ON_DRIVE is set to True
 CLEAR_CACHE = True
 
 #############
@@ -144,7 +148,7 @@ while(True):
         # Get training, validation and test data
         ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, VAL_SPLIT, SEED, CLASS_NAMES) 
         # Data tuning
-        ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test, CACHE_DS, CACHE_PTH, CACHE_NAME)
+        ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test, CACHE_DS, CACHE_ON_DRIVE, CACHE_PTH, CACHE_NAME)
         # Data augmentation -> Flipping the image is not helpful because of the orientation of the DIC images
         # ds_train = ds_train.map(fcn.augment_img, num_parallel_calls=tf.data.AUTOTUNE)               
         
@@ -161,7 +165,7 @@ while(True):
             print('No training data loaded yet!')
         else:
             # Clear cache folder from old cached datasets
-            if(CLEAR_CACHE):
+            if(CACHE_DS and CACHE_ON_DRIVE and CLEAR_CACHE):
                 fcn.clear_ds_cache(CACHE_PTH)
 
             # Compile model
