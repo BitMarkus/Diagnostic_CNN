@@ -18,7 +18,6 @@ import sys
 import os
 import glob
 import numpy as np
-import shutil
 from pathlib import Path
 
 # Prepare training, validation and test dataset
@@ -307,6 +306,18 @@ def clear_ds_cache(cache_pth):
         # print(f)
     print("\nCached datasets removed!")
     return True
+
+# Function creates all working folders in the root directory of the program
+# If they do not exist yet!
+def create_folders(data_pth, chkpt_pth, log_pth, plot_pth, vis_pth, pred_pth, cache_pth):
+    # https://kodify.net/python/pathlib-path-mkdir-method/
+    Path(data_pth).mkdir(parents=True, exist_ok=True)
+    Path(chkpt_pth).mkdir(parents=True, exist_ok=True)
+    Path(log_pth).mkdir(parents=True, exist_ok=True)
+    Path(plot_pth).mkdir(parents=True, exist_ok=True)
+    Path(vis_pth).mkdir(parents=True, exist_ok=True)
+    Path(pred_pth).mkdir(parents=True, exist_ok=True)
+    Path(cache_pth).mkdir(parents=True, exist_ok=True)
 
 """
 # utility function to get rid of directories containing lock files

@@ -11,7 +11,7 @@ Training images are taken on a Zeiss microscope with a 63x oil objective. With t
 
 After testing several different CNN architectures (VGG, DensNet, ResNet), it has become clear that the Xception network appears to be the most suitable for these purposes. Due to data protection, no training images are included. This is not yet a fully-fledged program. The project is only just beginning, which is why the source code is constantly being adapted and improved.
 
-After cloning the repository the following folders need to be created in the program folder:
+After starting the software the first time, the following folders will be created in the program folder:
 - dataset/: This is the folder for training images. For each class a subfolder must be created in dataset/. The name of the class folders are taken as class labels.
 - logs/: In case Tensorboard is used for monitoring training progress.
 - plots/: Folder for plots. E.g. training/validation accuracy and loss as well as the learning rate are saved automatically as a plot at the end of a training.

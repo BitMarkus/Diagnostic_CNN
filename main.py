@@ -56,8 +56,6 @@ LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 DATA_PTH = pathlib.Path('dataset/')
 # Path for checkpoints folder
 CHKPT_PTH = pathlib.Path('chkpt/')
-# Path for saving checkpoints including file name
-CHKPT_FILE_PTH = pathlib.Path(CHKPT_PTH / "checkpoint-{epoch:02d}-{val_accuracy:.2f}.weights.h5")
 # Path for tensorboard logs
 LOG_PTH = pathlib.Path("logs/")
 # Path auto save the plots at the end of the training
@@ -68,10 +66,15 @@ VIS_PTH = pathlib.Path("vis/")
 PRED_PTH = pathlib.Path("predictions/")
 # Path to cached datasets
 CACHE_PTH = pathlib.Path("cache/")
+# Create working folders if not exist
+fcn.create_folders(DATA_PTH, CHKPT_PTH, LOG_PTH, PLOT_PTH, VIS_PTH, PRED_PTH, CACHE_PTH)
 # Name for cached dataset
 CACHE_NAME = "ds.cache"
 # File extension for saved checkpoints
 CHKPT_EXT = ".weights.h5"
+# Path for saving checkpoints including file name
+CHKPT_FILE_PTH = pathlib.Path(CHKPT_PTH / "checkpoint-{epoch:02d}-{val_accuracy:.2f}.weights.h5")
+
 
 # CLASS PARAMETERS #
 # Class names according to the subfolder structure in the data (and prediction) folder 
@@ -195,6 +198,7 @@ while(True):
 
     elif(menu1 == 5):
         # Load checkpoint weights
+        # checkpoint-08-0.97_4cl
         print("\n:LOAD CHECKPOINT:") 
         if('model' not in globals()):
             print('No network generated yet!')
@@ -318,7 +322,6 @@ while(True):
                 cm = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
                 print(cm)
                 vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True)   
-                # checkpoint-08-0.97_4cl
 
     ################
     # Exit Program #
