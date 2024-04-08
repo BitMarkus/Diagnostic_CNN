@@ -180,15 +180,15 @@ def get_callbacks(callbacks_enable, checkpoint_path, saving_th):
 def lr_scheduler(epoch):
     # SGD optimizer
     learning_rate = 0.01
-    if epoch >= 2:
+    if epoch >= 4:
         learning_rate = 0.005
-    if epoch >= 5:
-        learning_rate = 0.001
     if epoch >= 8:
-        learning_rate = 0.0005
+        learning_rate = 0.001
     if epoch >= 11:
+        learning_rate = 0.0005
+    if epoch >= 15:
         learning_rate = 0.0001
-    if epoch >= 12:
+    if epoch >= 18:
         learning_rate = 0.00005
     """
     # Old SGD optimizer for grayscale images
