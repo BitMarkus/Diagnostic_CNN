@@ -35,9 +35,9 @@ The program has a menu with the following options:
 All program parameters are listed at the beginning of the program and can be adjusted to the specific needs. The most important ones are: image height and width in px, color mode, validation seed, batch size, validation split, and number of epochs. The learning rate is determined by a learning rate scheduler and can be found under fcn.py, function: lr_scheduler(). L2 weight decay and dropout are obsolete as global average pooling is used before the classifier instead of dense layers. Stochastic gradient descent (SGD) is used as optimizer with a momentum of 0.9. For this project it works better than ADAM.
 
 Tested under the following environment:
-Python:  3.11.7
-TensorFlow:  2.16.1
-Keras:  3.0.5 
-CUDNN:  8
+NVIDIA RTX 4090 or NVIDIA RTX A5000 (24 GB VRAM),
+Python:  3.11.7,
+TensorFlow:  2.16.1,
+Keras:  3.0.5, 
+CUDNN:  8,
 CUDA:  12.3
-NVIDIA RTX 4090 or NVIDIA RTX A5000 (24 GB VRAM)
