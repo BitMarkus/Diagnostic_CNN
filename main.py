@@ -39,7 +39,7 @@ SAVING_THRESHOLD = 0.8
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
 SEED = 111                  # 123
 BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
-VAL_SPLIT = 0.1            # 0.2
+VAL_SPLIT = 0.1             # 0.2
 NUM_EPOCHS = 20             # 50; with a lot of training images (> 10,000), even 10 epochs are enough
 OPT_MOMENTUM = 0.9          # 0.9
 # Learning rate:
@@ -288,40 +288,22 @@ while(True):
             if(pred_folders != CLASS_NAMES):
                 print('Folder structure in predict/ folder does not match with dataset/ folder!')
             else:
-                # Print CM for test dataset                  
-                predictions = np.array([])
-                labels = np.array([])
-                for x, y in ds_test:
-                    predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
-                    labels = np.concatenate((labels, y), axis=0)              
-                cm = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
-                print('Confusion matrix for test dataset:')
-                print(cm)
+                # Print CM for test dataset 
+                print('Confusion matrix for test dataset:')   
+                fcn.calc_confusion_matrix(ds_test, model, NUM_CLASSES, print_in_terminal=True)
 
-                # Print CM for validation dataset                  
-                predictions = np.array([])
-                labels = np.array([])
-                for x, y in ds_validation:
-                    predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
-                    labels = np.concatenate((labels, y), axis=0)              
-                cm = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
-                print('Confusion matrix for validation dataset:')
-                print(cm)
+                # Print CM for validation dataset    
+                print('Confusion matrix for validation dataset:')  
+                fcn.calc_confusion_matrix(ds_validation, model, NUM_CLASSES, print_in_terminal=True)
 
-                # Get dataset for prediction
+                # Print CM for prediction dataset
                 print('Confusion matrix for prediction dataset:')
                 ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
                 ds_pred = fcn.tune_pred_img(ds_pred)
-                # Get predictions and labels for the test dataset
-                # https://stackoverflow.com/questions/64687375/get-labels-from-dataset-when-using-tensorflow-image-dataset-from-directory
-                predictions = np.array([])
-                labels = np.array([])
-                for x, y in ds_pred:
-                    predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
-                    labels = np.concatenate((labels, y), axis=0)
-                cm = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=NUM_CLASSES).numpy()
-                print(cm)
-                vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True)   
+                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, print_in_terminal=True)
+                vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True) 
+
+                # checkpoint-08-0.97_4cl
 
     ################
     # Exit Program #
