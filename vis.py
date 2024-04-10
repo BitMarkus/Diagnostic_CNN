@@ -33,8 +33,8 @@ def save_metrics_plot(eval_history, plot_path, seed):
 # Prints accuracy and loss after training
 def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=True, save_plot=False):
     # Accuracy
-    acc = train_history.history['accuracy']
-    val_acc = train_history.history['val_accuracy']
+    acc = train_history.history['acc']
+    val_acc = train_history.history['val_acc']
     # Loss
     loss = train_history.history['loss']
     val_loss = train_history.history['val_loss']

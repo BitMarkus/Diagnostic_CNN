@@ -136,7 +136,7 @@ def get_callbacks(callbacks_enable, checkpoint_path, saving_th):
         model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=checkpoint_path,               # Path to checkpoint file (not only folder)
             save_weights_only=True,                 # False = whole model will be saved
-            monitor='val_accuracy',                 # Value to monitor
+            monitor='val_acc',                 # Value to monitor
             mode='max',                             # max, min, auto fpr value to monitor
             save_best_only=True,                    # save only the best model/weights
             verbose=1,                              # show messages
@@ -147,7 +147,7 @@ def get_callbacks(callbacks_enable, checkpoint_path, saving_th):
     # Early stopping:
     if(callbacks_enable["early_stop"]):
         early_stopping_callback = tf.keras.callbacks.EarlyStopping(
-            monitor='val_accuracy', 
+            monitor='val_acc', 
             patience=20,            # 10-15
             start_from_epoch=40     # 40
         )
@@ -309,7 +309,7 @@ def clear_ds_cache(cache_pth):
 
 # Function creates all working folders in the root directory of the program
 # If they do not exist yet!
-def create_folders(data_pth, chkpt_pth, log_pth, plot_pth, vis_pth, pred_pth, cache_pth):
+def create_prg_folders(data_pth, chkpt_pth, log_pth, plot_pth, vis_pth, pred_pth, cache_pth):
     # https://kodify.net/python/pathlib-path-mkdir-method/
     Path(data_pth).mkdir(parents=True, exist_ok=True)
     Path(chkpt_pth).mkdir(parents=True, exist_ok=True)
@@ -327,26 +327,20 @@ def calc_confusion_matrix(dataset, model, num_classes, print_in_terminal=False):
     predictions = np.array([])
     labels = np.array([])
     for x, y in dataset:
-        predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
+        # https://stackoverflow.com/questions/59946574/how-to-make-a-prediction-as-binary-output-python-tensorflow
+        # Binary classification
+        if(num_classes == 2):
+            predictions = np.concatenate((predictions, (model.predict(x, verbose=0) > 0.5).astype("int32")), axis=None)
+        elif(num_classes > 2):
+            predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
         labels = np.concatenate((labels, y), axis=0)              
     cm = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=num_classes).numpy()
+    # print(predictions)
+    # print(labels)
     if(print_in_terminal):
         print(cm)  
     return cm  
 
-"""
-# utility function to get rid of directories containing lock files
-# https://github.com/tensorflow/tensorflow/issues/18266
-def delete_trailing_lock_files(cache_root):
-  lock_file_dirs = {}
-  for filename in Path(cache_root).glob('**/*.lock*'):
-    lock_file_dirs[os.path.split(filename)[0] + '/'] = ''
-  for dir in lock_file_dirs.keys():
-    try:
-      shutil.rmtree(dir)
-    except:
-      print('failed removing dir', filename)
-"""
 """
 # Function counts the number of cnn layers in a model
 def num_cnn_layers(model):

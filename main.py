@@ -3,11 +3,11 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from os import listdir
 from os.path import isfile, join
-import tensorflow as tf
+# import tensorflow as tf
+# import numpy as np
 import keras
 import pathlib
 import random
-import numpy as np
 import matplotlib.pyplot as plt
 # Import own classes and functions
 from xception import xception_model
@@ -34,22 +34,7 @@ INPUT_SHAPE = (None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 # Enable or disable callbacks
 CALLBACKS_ENABLE = {"save_ckpt": True, "early_stop": False, "tensorboard": True, "lr_scheduler": True}
 # Minimum validation accuracy from which on checkpoints will be saved
-SAVING_THRESHOLD = 0.8
-
-# NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
-SEED = 111                  # 123
-BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
-VAL_SPLIT = 0.1             # 0.2
-NUM_EPOCHS = 20             # 50; with a lot of training images (> 10,000), even 10 epochs are enough
-OPT_MOMENTUM = 0.9          # 0.9
-# Learning rate:
-# If the lr callback isn't disabled, the lr is determined by the learning rate scheduler!
-# Or else the following value is used during the whole training:
-LEARNING_RATE = 0.01        # 0.01 for SGD, 0.00001 for ADAM     
-OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
-LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
-# L2_WEIGHT_DECAY = 0       -> Currently not in use
-# DROPOUT = 0.5             -> Currently not in use 
+SAVING_THRESHOLD = 0.9
 
 # PROGRAM PARAMETERS #
 # Path to dataset
@@ -67,31 +52,72 @@ PRED_PTH = pathlib.Path("predictions/")
 # Path to cached datasets
 CACHE_PTH = pathlib.Path("cache/")
 # Create working folders if not exist
-fcn.create_folders(DATA_PTH, CHKPT_PTH, LOG_PTH, PLOT_PTH, VIS_PTH, PRED_PTH, CACHE_PTH)
+fcn.create_prg_folders(DATA_PTH, CHKPT_PTH, LOG_PTH, PLOT_PTH, VIS_PTH, PRED_PTH, CACHE_PTH)
 # Name for cached dataset
 CACHE_NAME = "ds.cache"
 # File extension for saved checkpoints
 CHKPT_EXT = ".weights.h5"
 # Path for saving checkpoints including file name
-CHKPT_FILE_PTH = pathlib.Path(CHKPT_PTH / "checkpoint-{epoch:02d}-{val_accuracy:.2f}.weights.h5")
-
+CHKPT_FILE_PTH = pathlib.Path(CHKPT_PTH / "checkpoint-{epoch:02d}-{val_acc:.2f}.weights.h5")
 
 # CLASS PARAMETERS #
 # Class names according to the subfolder structure in the data (and prediction) folder 
 CLASS_NAMES = fcn.get_class_names(DATA_PTH)
 NUM_CLASSES = len(CLASS_NAMES)
 
+# NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
+SEED = 123                  # 123
+BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
+VAL_SPLIT = 0.1             # 0.2
+NUM_EPOCHS = 20             # 50; with a lot of training images (> 10,000), even 10 epochs are enough
+OPT_MOMENTUM = 0.9          # 0.9
+# Learning rate:
+# If the lr callback isn't disabled, the lr is determined by the learning rate scheduler!
+# Or else the following value is used during the whole training:
+LEARNING_RATE = 0.01        # 0.01 for SGD, 0.00001 for ADAM  
+
+# OPTIMIZER #
+OPT = keras.optimizers.SGD(LEARNING_RATE, OPT_MOMENTUM)
+
+# LOSS FUNCTION #
+if(NUM_CLASSES == 2):
+    LOSS = keras.losses.BinaryCrossentropy(from_logits=False)
+elif(NUM_CLASSES > 2):
+    LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+
+# METRICS #
+# https://www.tensorflow.org/tutorials/structured_data/imbalanced_data
+# https://stackoverflow.com/questions/66635552/keras-assessing-the-roc-auc-of-multiclass-cnn
+# ROC only for binary classifications!
+if(NUM_CLASSES == 2):
+    METRICS = [
+        keras.metrics.BinaryAccuracy(name='acc'),
+        keras.metrics.Precision(name='prec'),
+        keras.metrics.Recall(name='rec'),
+        keras.metrics.AUC(name='auc'),
+        keras.metrics.AUC(name='prc', curve='PR'), # precision-recall curve
+        # keras.metrics.TruePositives(name='tp'),
+        # keras.metrics.FalsePositives(name='fp'),
+        # keras.metrics.TrueNegatives(name='tn'),
+        # keras.metrics.FalseNegatives(name='fn'),
+        # keras.metrics.MeanSquaredError(name='Brier score'), # No idea what this is!
+        # keras.metrics.BinaryCrossentropy(name='bin_loss'), # same as model's loss, but gives an error! 
+        # Loss is logged anyways 
+    ]
+elif(NUM_CLASSES > 2):
+    METRICS = ["acc"]  
+
 # CACHE PARAMETERS #
 # Parameter to determine if training dataset is suppose to be cached
 # If the dataset is big, caching needs to be done to the HDD or else you ran out of RAM
 # Caching the dataset makes training faster, but it requires a lot of hard disk space or RAM
-CACHE_DS = False
+CACHE_DS = True
 # Parameter determines if data is cached to memory or hard disk drive
 # True: data is cached as a file on the hard disk drive, False: cached to RAM
 CACHE_ON_DRIVE = False
 # Parameter to clear cached old datasets from the cache/ folder
 # If the same dataset is trained as before, set it to False
-# When the dataset is changed, set it to True
+# When the dataset has changed, set it to True
 # Only of importance, if CACHE_DS and CACHE_ON_DRIVE is set to True
 CLEAR_CACHE = False
 
@@ -106,10 +132,11 @@ while(True):
     print("3) Load Training Data")
     print("4) Train Network")
     print("5) Load Checkpoint")
-    print("6) Predict random Images in Folder")
-    print("7) Predict all Images in Folder")
+    print("6) Predict random Images in Predictions Subfolder")
+    print("7) Predict all Images in Predictions Folder")
     print("8) Plot confusion matrix")
-    print("9) Exit Program")
+    print("9) Plot ROC Curve")
+    print("10) Exit Program")
     menu1 = int(menu.input_int("Please choose: "))
 
     ######################
@@ -153,7 +180,7 @@ while(True):
         
     #################
     # Train Network #  
-    #################
+    #################   
               
     elif(menu1 == 4):
         print("\n:TRAIN NETWORK:", end='') 
@@ -172,7 +199,7 @@ while(True):
                 # from_logits=False: Softmax on output layer
                 loss=LOSS,
                 optimizer=OPT,
-                metrics=["accuracy"],
+                metrics=METRICS,
             )
 
             # Get list with callbacks
@@ -198,7 +225,6 @@ while(True):
 
     elif(menu1 == 5):
         # Load checkpoint weights
-        # checkpoint-08-0.97_4cl
         print("\n:LOAD CHECKPOINT:") 
         if('model' not in globals()):
             print('No network generated yet!')
@@ -256,28 +282,30 @@ while(True):
             print('No network generated yet!')
         else:
             # Get dataset for prediction
-            ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
-            ds_pred = fcn.tune_pred_img(ds_pred)
+            if('ds_pred' not in globals()): 
+                ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
+                ds_pred = fcn.tune_pred_img(ds_pred)
+
             # Compile model
             model.compile(
-                # from_logits=False: Softmax on output layer
                 loss=LOSS,
                 optimizer=OPT,
-                metrics=["accuracy"],
+                metrics=METRICS,
             )
             print("Evaluate model with prediction dataset:")
             model.evaluate(ds_pred, verbose=1) 
 
-            print("Evaluate model with test dataset:")
-            model.evaluate(ds_test, verbose=1) 
-            print("Evaluate model with validation dataset:")
-            model.evaluate(ds_validation, verbose=1) 
-
+            # Evaluate model with test and validation dataset (if datasets are loaded)
+            if('ds_train' in globals()):
+                print("Evaluate model with test dataset:")
+                model.evaluate(ds_test, verbose=1) 
+                print("Evaluate model with validation dataset:")
+                model.evaluate(ds_validation, verbose=1) 
 
     #########################
     # Plot confusion matrix #
     #########################
-            
+      
     elif(menu1 == 8):
         print("\n:PLOT CONFUSION MATRIX:") 
         if('model' not in globals()):
@@ -288,28 +316,37 @@ while(True):
             if(pred_folders != CLASS_NAMES):
                 print('Folder structure in predict/ folder does not match with dataset/ folder!')
             else:
-                # Print CM for test dataset 
-                print('Confusion matrix for test dataset:')   
-                fcn.calc_confusion_matrix(ds_test, model, NUM_CLASSES, print_in_terminal=True)
+                # Print CM for test and validation dataset (if datasets are loaded)
+                if('ds_train' in globals()): 
+                    print('Confusion matrix for test dataset:')   
+                    fcn.calc_confusion_matrix(ds_test, model, NUM_CLASSES, print_in_terminal=True)  
+                    print('Confusion matrix for validation dataset:')  
+                    fcn.calc_confusion_matrix(ds_validation, model, NUM_CLASSES, print_in_terminal=True)
 
-                # Print CM for validation dataset    
-                print('Confusion matrix for validation dataset:')  
-                fcn.calc_confusion_matrix(ds_validation, model, NUM_CLASSES, print_in_terminal=True)
-
-                # Print CM for prediction dataset
+                # Print CM for prediction dataset and plot graph using matplotlib
                 print('Confusion matrix for prediction dataset:')
-                ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
-                ds_pred = fcn.tune_pred_img(ds_pred)
+                if('ds_pred' not in globals()): 
+                    ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
+                    ds_pred = fcn.tune_pred_img(ds_pred)
                 cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, print_in_terminal=True)
                 vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True) 
 
-                # checkpoint-08-0.97_4cl
+    ##################
+    # Plot ROC Curve #
+    ##################
+
+    elif(menu1 == 9):
+        print("\n:PLOT ROC CURVE:") 
+        if('model' not in globals()):
+            print('No network generated yet!')
+        else:
+            print('Not implemented yet!')
 
     ################
     # Exit Program #
     ################
 
-    elif(menu1 == 9):
+    elif(menu1 == 10):
         print("\nExit program...")
         break
     
