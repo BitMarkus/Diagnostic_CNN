@@ -328,7 +328,7 @@ while(True):
                 if('ds_pred' not in globals()): 
                     ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
                     ds_pred = fcn.tune_pred_img(ds_pred)
-                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, print_in_terminal=True)
+                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=0.5, print_in_terminal=True)
                 vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True) 
 
     ##################

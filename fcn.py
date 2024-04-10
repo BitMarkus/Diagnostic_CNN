@@ -321,7 +321,7 @@ def create_prg_folders(data_pth, chkpt_pth, log_pth, plot_pth, vis_pth, pred_pth
 
 # Function returns a confusion matrix displayed in the terminal
 # for a specific dataset and a specific trained model
-def calc_confusion_matrix(dataset, model, num_classes, print_in_terminal=False):
+def calc_confusion_matrix(dataset, model, num_classes, threshold=0.5, print_in_terminal=False):
     # Get predictions and labels for the dataset
     # https://stackoverflow.com/questions/64687375/get-labels-from-dataset-when-using-tensorflow-image-dataset-from-directory
     predictions = np.array([])
@@ -330,7 +330,7 @@ def calc_confusion_matrix(dataset, model, num_classes, print_in_terminal=False):
         # https://stackoverflow.com/questions/59946574/how-to-make-a-prediction-as-binary-output-python-tensorflow
         # Binary classification
         if(num_classes == 2):
-            predictions = np.concatenate((predictions, (model.predict(x, verbose=0) > 0.5).astype("int32")), axis=None)
+            predictions = np.concatenate((predictions, (model.predict(x, verbose=0) > threshold).astype("int32")), axis=None)
         elif(num_classes > 2):
             predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
         labels = np.concatenate((labels, y), axis=0)              
