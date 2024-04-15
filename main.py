@@ -4,7 +4,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from os import listdir
 from os.path import isfile, join
 # import tensorflow as tf
-# import numpy as np
+import numpy as np
 import keras
 import pathlib
 import random
@@ -135,7 +135,7 @@ while(True):
     print("6) Predict random Images in Predictions Subfolder")
     print("7) Predict all Images in Predictions Folder")
     print("8) Plot confusion matrix")
-    print("9) Plot ROC Curve")
+    print("9) Plot ROC Curve (for Binary Classification)")
     print("10) Exit Program")
     menu1 = int(menu.input_int("Please choose: "))
 
@@ -340,7 +340,66 @@ while(True):
         if('model' not in globals()):
             print('No network generated yet!')
         else:
-            print('Not implemented yet!')
+            if(NUM_CLASSES != 2):
+                print('ROC curves are only available fo binary classifications!')
+            else:
+                print('Plotting ROC curve for prediction dataset:')
+                # Read Prediction dataset
+                if('ds_pred' not in globals()): 
+                    ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
+                    ds_pred = fcn.tune_pred_img(ds_pred)
+
+                # Generates a ROC curve from the prediction dataset
+                # Reqires the sklearn library (scikit-learn)! No idea how to do that with tensorflow/keras alone
+                # https://medium.com/hackernoon/simple-guide-on-how-to-generate-roc-plot-for-keras-classifier-2ecc6c73115a
+                # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html
+                from sklearn.metrics import roc_curve
+                from sklearn.metrics import auc
+
+                # Get labels and predictions of prediction dataset
+                predict_ds_pred = np.array([])
+                labels_ds_pred = np.array([])
+                for x, y in ds_pred:
+                    labels_ds_pred = np.concatenate((labels_ds_pred, y), axis=0) 
+                    predict_ds_pred = np.concatenate((predict_ds_pred, model.predict(x, verbose=0)), axis=None) 
+                # Calculate ROC parameters and AUC using sklearn
+                fpr_ds_pred, tpr_ds_pred, thresh_ds_pred = roc_curve(labels_ds_pred, predict_ds_pred)
+                auc_ds_pred = auc(fpr_ds_pred, tpr_ds_pred)
+
+                # Get labels and predictions of test dataset
+                predict_ds_test = np.array([])
+                labels_ds_test = np.array([])
+                for x, y in ds_test:
+                    labels_ds_test = np.concatenate((labels_ds_test, y), axis=0) 
+                    predict_ds_test = np.concatenate((predict_ds_test, model.predict(x, verbose=0)), axis=None) 
+                # Calculate ROC parameters and AUC using sklearn
+                fpr_ds_test, tpr_ds_test, thresh_ds_test = roc_curve(labels_ds_test, predict_ds_test)
+                auc_ds_test = auc(fpr_ds_test, tpr_ds_test)
+
+                # Get labels and predictions of validation dataset
+                predict_ds_val = np.array([])
+                labels_ds_val = np.array([])
+                for x, y in ds_test:
+                    labels_ds_val = np.concatenate((labels_ds_val, y), axis=0) 
+                    predict_ds_val = np.concatenate((predict_ds_val, model.predict(x, verbose=0)), axis=None) 
+                # Calculate ROC parameters and AUC using sklearn
+                fpr_ds_val, tpr_ds_val, thresh_ds_val = roc_curve(labels_ds_val, predict_ds_val)
+                auc_ds_val = auc(fpr_ds_val, tpr_ds_val)
+
+                # Plot figure
+                plt.figure(figsize=(8, 8))
+                plt.plot([0, 1], [0, 1], linestyle='--', label='Random', color="black")
+                plt.plot(fpr_ds_pred, tpr_ds_pred, linewidth=2, color="red", label='Pred_ds: AUC {:.3f}'.format(auc_ds_pred), antialiased=False)
+                plt.plot(fpr_ds_test, tpr_ds_test, linewidth=2, linestyle=':', color="grey", label='Test_ds: AUC {:.3f}'.format(auc_ds_test), antialiased=False)
+                plt.plot(fpr_ds_val, tpr_ds_val, linewidth=2, linestyle=':', color="black", label='Val_ds: AUC {:.3f}'.format(auc_ds_val), antialiased=False)
+                plt.xlabel('False positive rate (FPR)')
+                plt.ylabel('True positive rate (TPR)')
+                plt.title('ROC curve')
+                plt.legend(loc='lower right')
+                plt.tight_layout()
+                plt.show()
+
+                # checkpoint-20-0.95_2cl_4x
 
     ################
     # Exit Program #

@@ -331,6 +331,7 @@ def calc_confusion_matrix(dataset, model, num_classes, threshold=0.5, print_in_t
         # Binary classification
         if(num_classes == 2):
             predictions = np.concatenate((predictions, (model.predict(x, verbose=0) > threshold).astype("int32")), axis=None)
+        # Multiple classes
         elif(num_classes > 2):
             predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
         labels = np.concatenate((labels, y), axis=0)              
