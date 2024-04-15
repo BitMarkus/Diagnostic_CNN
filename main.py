@@ -121,6 +121,13 @@ CACHE_ON_DRIVE = False
 # Only of importance, if CACHE_DS and CACHE_ON_DRIVE is set to True
 CLEAR_CACHE = False
 
+# PREDICTION PARAMETERS #
+# Threasholds for predictions (sigmoid activation) 
+# Only for binary classifications!
+PRED_THREASHOLD = 0.083999
+TEST_THREASHOLD = 0.5
+VAL_THREASHOLD = 0.5
+
 #############
 # Main Menu #
 #############
@@ -328,7 +335,8 @@ while(True):
                 if('ds_pred' not in globals()): 
                     ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
                     ds_pred = fcn.tune_pred_img(ds_pred)
-                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=0.083999, print_in_terminal=True)
+                # Threshold value is determined by the ROC curve
+                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=PRED_THREASHOLD, print_in_terminal=True)
                 vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True) 
 
     ##################
