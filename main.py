@@ -328,7 +328,7 @@ while(True):
                 if('ds_pred' not in globals()): 
                     ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
                     ds_pred = fcn.tune_pred_img(ds_pred)
-                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=0.5, print_in_terminal=True)
+                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=0.083999, print_in_terminal=True)
                 vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True) 
 
     ##################
@@ -365,6 +365,19 @@ while(True):
                 # Calculate ROC parameters and AUC using sklearn
                 fpr_ds_pred, tpr_ds_pred, thresh_ds_pred = roc_curve(labels_ds_pred, predict_ds_pred)
                 auc_ds_pred = auc(fpr_ds_pred, tpr_ds_pred)
+                # Calculate sweetspot threshold
+                # https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
+                # Calculate the g-mean for each threshold
+                # The Geometric Mean or G-Mean is a metric for imbalanced classification that, if optimized, 
+                # will seek a balance between the sensitivity and the specificity.
+                # G-Mean = sqrt(Sensitivity * Specificity)
+                # Sensitivity = TruePositive / (TruePositive + FalseNegative) = True Positive Rate
+                # Specificity = TrueNegative / (FalsePositive + TrueNegative) = 1 – False Positive Rate
+                gmeans = np.sqrt(tpr_ds_pred * (1-fpr_ds_pred))
+                # print(gmeans)
+                # Locate the index of the largest g-mean
+                ix = np.argmax(gmeans)
+                print('Best Threshold=%f, G-Mean=%.3f' % (thresh_ds_pred[ix], gmeans[ix]))
 
                 # Get labels and predictions of test dataset
                 predict_ds_test = np.array([])
@@ -387,11 +400,13 @@ while(True):
                 auc_ds_val = auc(fpr_ds_val, tpr_ds_val)
 
                 # Plot figure
+                # The lower the zorder, the more the plot is on the bottom (= background)
                 plt.figure(figsize=(8, 8))
                 plt.plot([0, 1], [0, 1], linestyle='--', label='Random', color="black")
-                plt.plot(fpr_ds_pred, tpr_ds_pred, linewidth=2, color="red", label='Pred_ds: AUC {:.3f}'.format(auc_ds_pred), antialiased=False)
-                plt.plot(fpr_ds_test, tpr_ds_test, linewidth=2, linestyle=':', color="grey", label='Test_ds: AUC {:.3f}'.format(auc_ds_test), antialiased=False)
-                plt.plot(fpr_ds_val, tpr_ds_val, linewidth=2, linestyle=':', color="black", label='Val_ds: AUC {:.3f}'.format(auc_ds_val), antialiased=False)
+                plt.scatter(fpr_ds_pred[ix], tpr_ds_pred[ix], marker='o', s=40, color='black', label=f'Best: {thresh_ds_pred[ix]:.3f}', zorder=4)
+                plt.plot(fpr_ds_pred, tpr_ds_pred, linewidth=2, color="red", label='Pred_ds: AUC {:.3f}'.format(auc_ds_pred), antialiased=False, zorder=3)
+                plt.plot(fpr_ds_test, tpr_ds_test, linewidth=2, linestyle=':', color="grey", label='Test_ds: AUC {:.3f}'.format(auc_ds_test), antialiased=False, zorder=2)
+                plt.plot(fpr_ds_val, tpr_ds_val, linewidth=2, linestyle=':', color="black", label='Val_ds: AUC {:.3f}'.format(auc_ds_val), antialiased=False, zorder=1)
                 plt.xlabel('False positive rate (FPR)')
                 plt.ylabel('True positive rate (TPR)')
                 plt.title('ROC curve')
