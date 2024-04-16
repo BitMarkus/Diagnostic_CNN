@@ -13,6 +13,8 @@ import tensorflow as tf
 from tensorflow.python.platform import build_info as tf_build_info
 import keras
 import sys
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
 # import matplotlib.pyplot as plt
 # from itertools import product
 import os
@@ -341,6 +343,40 @@ def calc_confusion_matrix(dataset, model, num_classes, threshold=0.5, print_in_t
     if(print_in_terminal):
         print(cm)  
     return cm  
+
+# Function returns true and predicted labels for a specific dataset
+def get_labels_and_prediction(dataset, model):
+    predict = np.array([])
+    labels = np.array([])
+    for x, y in dataset:
+        labels = np.concatenate((labels, y), axis=0) 
+        predict = np.concatenate((predict, model.predict(x, verbose=0)), axis=None)   
+    return labels, predict  
+
+# Calculates and returns the parameters for a ROC curve
+# tpr = true positive rate, fpr = false positive rate
+# Reqires the sklearn library (scikit-learn)! No idea how to do that with tensorflow/keras alone
+# https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html
+def calc_roc_curve(dataset, model):
+    # Get labels and predictions of prediction dataset
+    labels, predict = get_labels_and_prediction(dataset, model)
+    # Calculate ROC parameters and AUC using sklearn
+    fpr, tpr, threshold = roc_curve(labels, predict)
+    auc_roc = auc(fpr, tpr)
+    # Calculate sweetspot threshold
+    # https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
+    # Calculate the g-mean for each threshold
+    # The Geometric Mean or G-Mean is a metric for imbalanced classification that, if optimized, 
+    # will seek a balance between the sensitivity and the specificity.
+    # G-Mean = sqrt(Sensitivity * Specificity)
+    # Sensitivity = TruePositive / (TruePositive + FalseNegative) = True Positive Rate
+    # Specificity = TrueNegative / (FalsePositive + TrueNegative) = 1 – False Positive Rate
+    gmeans = np.sqrt(tpr * (1 - fpr))
+    # print(gmeans)
+    # Locate the index of the largest g-mean
+    ix = np.argmax(gmeans)
+    # Return dict
+    return {'fpr': fpr, 'tpr': tpr, 'thr_index': ix, 'thr': threshold[ix], 'auc': auc_roc, 'gmeans': gmeans[ix]}
 
 """
 # Function counts the number of cnn layers in a model

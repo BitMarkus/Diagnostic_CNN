@@ -112,6 +112,84 @@ def plot_confusion_matrix(cm, class_names, plot_path, show_plot=True, save_plot=
     if(show_plot):
         show_plot_exec()
 
+# Function returns a ROC plot for prediction dataset
+# Optional also for test and validation dataset
+# Parameters are the ROC data of the respective datasets as a dict via the calc_roc_curve() function
+# If this dict is False, the datasets were not loaded yet
+# https://medium.com/hackernoon/simple-guide-on-how-to-generate-roc-plot-for-keras-classifier-2ecc6c73115a
+def plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, plot_path, show_plot=True, save_plot=False):
+    # The lower the zorder, the more the plot is on the bottom (= background)
+    plt.figure(figsize=(8, 8))
+    plt.plot([0, 1], [0, 1], linestyle='--', label='Random', color="black")
+
+    # Prediction dataset
+    plt.scatter(roc_ds_pred['fpr'][roc_ds_pred['thr_index']], 
+                roc_ds_pred['tpr'][roc_ds_pred['thr_index']], 
+                marker='o', 
+                s=40, 
+                color='red', 
+                label=f"Pred_ds best threshold: {roc_ds_pred['thr']:.3f}", 
+                zorder=2)
+    plt.plot(roc_ds_pred['fpr'], 
+             roc_ds_pred['tpr'], 
+             linewidth=2, color="red", 
+             label='Pred_ds AUC: {:.3f}'.format(roc_ds_pred['auc']), 
+             antialiased=False, 
+             zorder=1)
+    
+    # Validation dataset
+    if(roc_ds_val):
+        plt.scatter(roc_ds_val['fpr'][roc_ds_val['thr_index']], 
+                    roc_ds_val['tpr'][roc_ds_val['thr_index']], 
+                    marker='o', 
+                    s=40, 
+                    color='grey', 
+                    label=f"Val_ds best threshold: {roc_ds_val['thr']:.3f}", 
+                    zorder=4)
+        plt.plot(roc_ds_val['fpr'], 
+                roc_ds_val['tpr'], 
+                linewidth=2, 
+                linestyle=':', 
+                color="grey",
+                label='Val_ds AUC: {:.3f}'.format(roc_ds_val['auc']), 
+                antialiased=False, 
+                zorder=3)
+    
+    # Test dataset
+    if(roc_ds_test):
+        plt.scatter(roc_ds_test['fpr'][roc_ds_test['thr_index']], 
+                    roc_ds_test['tpr'][roc_ds_test['thr_index']], 
+                    marker='o', 
+                    s=40, 
+                    color='black', 
+                    label=f"Test_ds best threshold: {roc_ds_test['thr']:.3f}", 
+                    zorder=6)
+        plt.plot(roc_ds_test['fpr'], 
+                roc_ds_test['tpr'], 
+                linewidth=2, 
+                linestyle=':', 
+                color="black", 
+                label='Test_ds AUC: {:.3f}'.format(roc_ds_test['auc']), 
+                antialiased=False, 
+                zorder=5)
+        
+    plt.xlabel('False positive rate (FPR)')
+    plt.ylabel('True positive rate (TPR)')
+    plt.title('ROC curve')
+    plt.legend(loc='lower right')
+    plt.tight_layout()
+
+    # Save plot
+    # Get date and time
+    date_time = datetime.now().strftime("%Y_%m_%d-%H_%M")
+    # Generate filename
+    filename = f"ROC_curve_{date_time}.png"
+    if(save_plot):
+        plt.savefig(str(plot_path) + '/' + filename, bbox_inches='tight')
+    # Show plot
+    if(show_plot):
+        show_plot_exec()
+
 """
 # Useful functions which are temporarily unused:
 

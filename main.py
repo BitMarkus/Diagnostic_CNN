@@ -66,7 +66,7 @@ CLASS_NAMES = fcn.get_class_names(DATA_PTH)
 NUM_CLASSES = len(CLASS_NAMES)
 
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
-SEED = 123                  # 123
+SEED = 246                  # 123
 BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
 VAL_SPLIT = 0.1             # 0.2
 NUM_EPOCHS = 20             # 50; with a lot of training images (> 10,000), even 10 epochs are enough
@@ -85,27 +85,39 @@ if(NUM_CLASSES == 2):
 elif(NUM_CLASSES > 2):
     LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 
+# PREDICTION PARAMETERS #
+# Threasholds for predictions (sigmoid activation) 
+# Only for binary classifications!
+PRED_THREASHOLD = 0.1 # for checkpoint checkpoint-20-0.95_2cl_4x
+TEST_THREASHOLD = 0.5
+VAL_THREASHOLD = 0.5
+
 # METRICS #
 # https://www.tensorflow.org/tutorials/structured_data/imbalanced_data
 # https://stackoverflow.com/questions/66635552/keras-assessing-the-roc-auc-of-multiclass-cnn
 # ROC only for binary classifications!
 if(NUM_CLASSES == 2):
-    METRICS = [
+    # Metrics for training (without threashold)
+    METRICS_TRAIN = [
         keras.metrics.BinaryAccuracy(name='acc'),
         keras.metrics.Precision(name='prec'),
         keras.metrics.Recall(name='rec'),
         keras.metrics.AUC(name='auc'),
-        keras.metrics.AUC(name='prc', curve='PR'), # precision-recall curve
-        # keras.metrics.TruePositives(name='tp'),
-        # keras.metrics.FalsePositives(name='fp'),
-        # keras.metrics.TrueNegatives(name='tn'),
-        # keras.metrics.FalseNegatives(name='fn'),
-        # keras.metrics.MeanSquaredError(name='Brier score'), # No idea what this is!
-        # keras.metrics.BinaryCrossentropy(name='bin_loss'), # same as model's loss, but gives an error! 
-        # Loss is logged anyways 
+        keras.metrics.AUC(name='prc', curve='PR') # precision-recall curve
     ]
+    # Metrics for evaluation (with threashold)
+    METRICS_EVAL = [
+        keras.metrics.BinaryAccuracy(threshold=PRED_THREASHOLD, name='acc'),
+        keras.metrics.Precision(name='prec'),
+        keras.metrics.Recall(name='rec'),
+        keras.metrics.AUC(name='auc'),
+        keras.metrics.AUC(name='prc', curve='PR')
+    ]    
 elif(NUM_CLASSES > 2):
-    METRICS = ["acc"]  
+    # Metrics for training
+    METRICS_TRAIN = ["acc"] 
+    # Metrics for evaluation
+    METRICS_EVAL = ["acc"] 
 
 # CACHE PARAMETERS #
 # Parameter to determine if training dataset is suppose to be cached
@@ -120,13 +132,6 @@ CACHE_ON_DRIVE = False
 # When the dataset has changed, set it to True
 # Only of importance, if CACHE_DS and CACHE_ON_DRIVE is set to True
 CLEAR_CACHE = False
-
-# PREDICTION PARAMETERS #
-# Threasholds for predictions (sigmoid activation) 
-# Only for binary classifications!
-PRED_THREASHOLD = 0.083999
-TEST_THREASHOLD = 0.5
-VAL_THREASHOLD = 0.5
 
 #############
 # Main Menu #
@@ -206,7 +211,7 @@ while(True):
                 # from_logits=False: Softmax on output layer
                 loss=LOSS,
                 optimizer=OPT,
-                metrics=METRICS,
+                metrics=METRICS_TRAIN,
             )
 
             # Get list with callbacks
@@ -297,7 +302,7 @@ while(True):
             model.compile(
                 loss=LOSS,
                 optimizer=OPT,
-                metrics=METRICS,
+                metrics=METRICS_EVAL,
             )
             print("Evaluate model with prediction dataset:")
             model.evaluate(ds_pred, verbose=1) 
@@ -326,15 +331,16 @@ while(True):
                 # Print CM for test and validation dataset (if datasets are loaded)
                 if('ds_train' in globals()): 
                     print('Confusion matrix for test dataset:')   
-                    fcn.calc_confusion_matrix(ds_test, model, NUM_CLASSES, print_in_terminal=True)  
+                    fcn.calc_confusion_matrix(ds_test, model, NUM_CLASSES, threshold=TEST_THREASHOLD, print_in_terminal=True)  
                     print('Confusion matrix for validation dataset:')  
-                    fcn.calc_confusion_matrix(ds_validation, model, NUM_CLASSES, print_in_terminal=True)
+                    fcn.calc_confusion_matrix(ds_validation, model, NUM_CLASSES, threshold=VAL_THREASHOLD, print_in_terminal=True)
 
                 # Print CM for prediction dataset and plot graph using matplotlib
                 print('Confusion matrix for prediction dataset:')
                 if('ds_pred' not in globals()): 
                     ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
                     ds_pred = fcn.tune_pred_img(ds_pred)
+
                 # Threshold value is determined by the ROC curve
                 cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=PRED_THREASHOLD, print_in_terminal=True)
                 vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True) 
@@ -351,76 +357,34 @@ while(True):
             if(NUM_CLASSES != 2):
                 print('ROC curves are only available fo binary classifications!')
             else:
-                print('Plotting ROC curve for prediction dataset:')
-                # Read Prediction dataset
-                if('ds_pred' not in globals()): 
-                    ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
-                    ds_pred = fcn.tune_pred_img(ds_pred)
+                # Check folders in prediction folder
+                pred_folders = fcn.get_class_names(PRED_PTH)
+                if(pred_folders != CLASS_NAMES):
+                    print('Folder structure in predict/ folder does not match with dataset/ folder!')
+                else:
+                    print('Plotting ROC curve for prediction dataset:')
+                    # Read Prediction dataset (if not yet done)
+                    if('ds_pred' not in globals()): 
+                        ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
+                        ds_pred = fcn.tune_pred_img(ds_pred)
 
-                # Generates a ROC curve from the prediction dataset
-                # Reqires the sklearn library (scikit-learn)! No idea how to do that with tensorflow/keras alone
-                # https://medium.com/hackernoon/simple-guide-on-how-to-generate-roc-plot-for-keras-classifier-2ecc6c73115a
-                # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html
-                from sklearn.metrics import roc_curve
-                from sklearn.metrics import auc
+                    # Prediction dataset
+                    roc_ds_pred = fcn.calc_roc_curve(ds_pred, model)
+                    print('Best threshold for prediction dataset: %f, G-Mean: %.3f' % (roc_ds_pred['thr'], roc_ds_pred['gmeans']))
+                    # Print ROC data for test and validation dataset (if datasets are loaded)
+                    if('ds_train' in globals()): 
+                        # Test dataset
+                        roc_ds_test = fcn.calc_roc_curve(ds_test, model)
+                        print('Best threshold for test dataset: %f, G-Mean: %.3f' % (roc_ds_test['thr'], roc_ds_test['gmeans']))
+                        # Validation dataset
+                        roc_ds_val = fcn.calc_roc_curve(ds_validation, model)
+                        print('Best threshold for validation dataset: %f, G-Mean: %.3f' % (roc_ds_val['thr'], roc_ds_val['gmeans']))   
+                    else:
+                        roc_ds_test = False
+                        roc_ds_val = False     
 
-                # Get labels and predictions of prediction dataset
-                predict_ds_pred = np.array([])
-                labels_ds_pred = np.array([])
-                for x, y in ds_pred:
-                    labels_ds_pred = np.concatenate((labels_ds_pred, y), axis=0) 
-                    predict_ds_pred = np.concatenate((predict_ds_pred, model.predict(x, verbose=0)), axis=None) 
-                # Calculate ROC parameters and AUC using sklearn
-                fpr_ds_pred, tpr_ds_pred, thresh_ds_pred = roc_curve(labels_ds_pred, predict_ds_pred)
-                auc_ds_pred = auc(fpr_ds_pred, tpr_ds_pred)
-                # Calculate sweetspot threshold
-                # https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
-                # Calculate the g-mean for each threshold
-                # The Geometric Mean or G-Mean is a metric for imbalanced classification that, if optimized, 
-                # will seek a balance between the sensitivity and the specificity.
-                # G-Mean = sqrt(Sensitivity * Specificity)
-                # Sensitivity = TruePositive / (TruePositive + FalseNegative) = True Positive Rate
-                # Specificity = TrueNegative / (FalsePositive + TrueNegative) = 1 – False Positive Rate
-                gmeans = np.sqrt(tpr_ds_pred * (1-fpr_ds_pred))
-                # print(gmeans)
-                # Locate the index of the largest g-mean
-                ix = np.argmax(gmeans)
-                print('Best Threshold=%f, G-Mean=%.3f' % (thresh_ds_pred[ix], gmeans[ix]))
-
-                # Get labels and predictions of test dataset
-                predict_ds_test = np.array([])
-                labels_ds_test = np.array([])
-                for x, y in ds_test:
-                    labels_ds_test = np.concatenate((labels_ds_test, y), axis=0) 
-                    predict_ds_test = np.concatenate((predict_ds_test, model.predict(x, verbose=0)), axis=None) 
-                # Calculate ROC parameters and AUC using sklearn
-                fpr_ds_test, tpr_ds_test, thresh_ds_test = roc_curve(labels_ds_test, predict_ds_test)
-                auc_ds_test = auc(fpr_ds_test, tpr_ds_test)
-
-                # Get labels and predictions of validation dataset
-                predict_ds_val = np.array([])
-                labels_ds_val = np.array([])
-                for x, y in ds_test:
-                    labels_ds_val = np.concatenate((labels_ds_val, y), axis=0) 
-                    predict_ds_val = np.concatenate((predict_ds_val, model.predict(x, verbose=0)), axis=None) 
-                # Calculate ROC parameters and AUC using sklearn
-                fpr_ds_val, tpr_ds_val, thresh_ds_val = roc_curve(labels_ds_val, predict_ds_val)
-                auc_ds_val = auc(fpr_ds_val, tpr_ds_val)
-
-                # Plot figure
-                # The lower the zorder, the more the plot is on the bottom (= background)
-                plt.figure(figsize=(8, 8))
-                plt.plot([0, 1], [0, 1], linestyle='--', label='Random', color="black")
-                plt.scatter(fpr_ds_pred[ix], tpr_ds_pred[ix], marker='o', s=40, color='black', label=f'Best: {thresh_ds_pred[ix]:.3f}', zorder=4)
-                plt.plot(fpr_ds_pred, tpr_ds_pred, linewidth=2, color="red", label='Pred_ds: AUC {:.3f}'.format(auc_ds_pred), antialiased=False, zorder=3)
-                plt.plot(fpr_ds_test, tpr_ds_test, linewidth=2, linestyle=':', color="grey", label='Test_ds: AUC {:.3f}'.format(auc_ds_test), antialiased=False, zorder=2)
-                plt.plot(fpr_ds_val, tpr_ds_val, linewidth=2, linestyle=':', color="black", label='Val_ds: AUC {:.3f}'.format(auc_ds_val), antialiased=False, zorder=1)
-                plt.xlabel('False positive rate (FPR)')
-                plt.ylabel('True positive rate (TPR)')
-                plt.title('ROC curve')
-                plt.legend(loc='lower right')
-                plt.tight_layout()
-                plt.show()
+                # Plot ROC curve
+                vis.plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
 
                 # checkpoint-20-0.95_2cl_4x
 
