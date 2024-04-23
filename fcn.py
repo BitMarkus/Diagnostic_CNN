@@ -181,15 +181,15 @@ def get_callbacks(callbacks_enable, checkpoint_path, saving_th):
 def lr_scheduler(epoch):
     # SGD optimizer
     learning_rate = 0.01
-    if epoch >= 4:
+    if epoch >= 6:
         learning_rate = 0.005
-    if epoch >= 8:
+    if epoch >= 12:
         learning_rate = 0.001
-    if epoch >= 11:
-        learning_rate = 0.0005
-    if epoch >= 15:
-        learning_rate = 0.0001
     if epoch >= 18:
+        learning_rate = 0.0005
+    if epoch >= 24:
+        learning_rate = 0.0001
+    if epoch >= 28:
         learning_rate = 0.00005
     """
     # Old SGD optimizer for grayscale images
@@ -237,18 +237,36 @@ def load_img(pth, category, name, color_mode):
     return img
 
 # Function predicts a single image and prints output
-def predict_single_img(model, data_path, subfolder, img_name, color_mode, class_names):
+def predict_single_img(model, data_path, subfolder, img_name, color_mode, class_names, threshold):
+    # Count number of classes
+    num_classes = len(class_names)
+    # print(class_names)
     # load image
     img = load_img(data_path, subfolder, img_name, color_mode)
     # Predict probabilities: return of a 2D numpy array (why 2D?)
     print(f"Predict class of image \"{img_name}\":")
     probabilities = model.predict(img, verbose=0)
+    # print(probabilities)  
     # Connect probability with the respective class label
-    class_index = np.argmax(probabilities, axis=-1)
-    # print(class_index)
-    pred_class_name = class_names[class_index[0]]
-    pred_probability = probabilities[0][class_index[0]]*100
-    print(f"  -> Image {img_name} belongs to class \"{pred_class_name}\" ({pred_probability:.2f}%)")   
+    # Binary classification
+    if(num_classes == 2):
+        if(probabilities <= threshold):
+            pred_class_name = class_names[0]
+        elif(probabilities > threshold):
+            pred_class_name = class_names[1]
+        pred_probability = probabilities[0][0]*100 
+    # Multi classification
+    elif(num_classes > 2):
+        class_index = np.argmax(probabilities, axis=-1)
+        pred_class_name = class_names[class_index[0]]
+        pred_probability = probabilities[0][class_index[0]]*100
+    # Print data
+    print(f"  -> Image {img_name} belongs to class \"{pred_class_name}\" ", end="")  
+    # Binary classification
+    if(num_classes == 2): 
+        print(f"({pred_probability:.2f}%, 0%={class_names[0]}, 100%={class_names[1]}, thr={threshold})")  
+    elif(num_classes > 2):
+        print(f"({pred_probability:.2f}%)")
 
 # Function returns a dict with all indices and layer names
 # of all cnn layers in the model as list
@@ -371,12 +389,26 @@ def calc_roc_curve(dataset, model):
     # G-Mean = sqrt(Sensitivity * Specificity)
     # Sensitivity = TruePositive / (TruePositive + FalseNegative) = True Positive Rate
     # Specificity = TrueNegative / (FalsePositive + TrueNegative) = 1 – False Positive Rate
+    ###########################################################################
+    # Variant 1:
     gmeans = np.sqrt(tpr * (1 - fpr))
-    # print(gmeans)
     # Locate the index of the largest g-mean
     ix = np.argmax(gmeans)
+    # print(f"Variant 1: index={ix}, threshold={threshold[ix]}")
+    ###########################################################################
+    # Variant 2: Youden's J statistic
+    """
+    J = tpr - fpr
+    # Locate the index of the largest J value
+    ix = np.argmax(J)
+    # print(f"Variant 2: index={ix}, threshold={threshold[ix]}")
+    """
+    ###########################################################################
+    # Unlike in the tutorial, the two variants return (slightly) different values?!?
+    
     # Return dict
-    return {'fpr': fpr, 'tpr': tpr, 'thr_index': ix, 'thr': threshold[ix], 'auc': auc_roc, 'gmeans': gmeans[ix]}
+    return {'fpr': fpr, 'tpr': tpr, 'thr_index': ix, 'thr': threshold[ix], 'auc': auc_roc}
+    
 
 """
 # Function counts the number of cnn layers in a model

@@ -4,7 +4,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from os import listdir
 from os.path import isfile, join
 # import tensorflow as tf
-import numpy as np
+# import numpy as np
 import keras
 import pathlib
 import random
@@ -66,10 +66,10 @@ CLASS_NAMES = fcn.get_class_names(DATA_PTH)
 NUM_CLASSES = len(CLASS_NAMES)
 
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
-SEED = 246                  # 123
+SEED = 377                  # 123
 BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
-VAL_SPLIT = 0.1             # 0.2
-NUM_EPOCHS = 20             # 50; with a lot of training images (> 10,000), even 10 epochs are enough
+VAL_SPLIT = 0.2             # 0.2
+NUM_EPOCHS = 30             # 50; with a lot of training images (> 10,000), even 10 epochs are enough
 OPT_MOMENTUM = 0.9          # 0.9
 # Learning rate:
 # If the lr callback isn't disabled, the lr is determined by the learning rate scheduler!
@@ -86,11 +86,11 @@ elif(NUM_CLASSES > 2):
     LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 
 # PREDICTION PARAMETERS #
-# Threasholds for predictions (sigmoid activation) 
+# Thresholds for predictions (sigmoid activation) 
 # Only for binary classifications!
-PRED_THREASHOLD = 0.1 # for checkpoint checkpoint-20-0.95_2cl_4x
-TEST_THREASHOLD = 0.5
-VAL_THREASHOLD = 0.5
+PRED_THRESHOLD = 0.5 # for checkpoint-22-0.94_2cl_4x, V1: 0.05764821916818619, V2: 0.024850474670529366
+TEST_THRESHOLD = 0.5
+VAL_THRESHOLD = 0.5
 
 # METRICS #
 # https://www.tensorflow.org/tutorials/structured_data/imbalanced_data
@@ -107,7 +107,7 @@ if(NUM_CLASSES == 2):
     ]
     # Metrics for evaluation (with threashold)
     METRICS_EVAL = [
-        keras.metrics.BinaryAccuracy(threshold=PRED_THREASHOLD, name='acc'),
+        keras.metrics.BinaryAccuracy(threshold=PRED_THRESHOLD, name='acc'),
         keras.metrics.Precision(name='prec'),
         keras.metrics.Recall(name='rec'),
         keras.metrics.AUC(name='auc'),
@@ -144,9 +144,9 @@ while(True):
     print("3) Load Training Data")
     print("4) Train Network")
     print("5) Load Checkpoint")
-    print("6) Predict random Images in Predictions Subfolder")
+    print("6) Predict Random Images in Predictions Subfolder")
     print("7) Predict all Images in Predictions Folder")
-    print("8) Plot confusion matrix")
+    print("8) Plot Confusion Matrix")
     print("9) Plot ROC Curve (for Binary Classification)")
     print("10) Exit Program")
     menu1 = int(menu.input_int("Please choose: "))
@@ -278,7 +278,7 @@ while(True):
                     # print(choice_list)
                     # Make predictions
                     for pred_img in choice_list:
-                        fcn.predict_single_img(model, PRED_PTH, subfolder, pred_img, COLOR_MODE, CLASS_NAMES)
+                        fcn.predict_single_img(model, PRED_PTH, subfolder, pred_img, COLOR_MODE, CLASS_NAMES, PRED_THRESHOLD)
                 else:
                     print(f"Not enough images in folder (max {len(folder_list)})!")     
             else:
@@ -331,9 +331,9 @@ while(True):
                 # Print CM for test and validation dataset (if datasets are loaded)
                 if('ds_train' in globals()): 
                     print('Confusion matrix for test dataset:')   
-                    fcn.calc_confusion_matrix(ds_test, model, NUM_CLASSES, threshold=TEST_THREASHOLD, print_in_terminal=True)  
+                    fcn.calc_confusion_matrix(ds_test, model, NUM_CLASSES, threshold=TEST_THRESHOLD, print_in_terminal=True)  
                     print('Confusion matrix for validation dataset:')  
-                    fcn.calc_confusion_matrix(ds_validation, model, NUM_CLASSES, threshold=VAL_THREASHOLD, print_in_terminal=True)
+                    fcn.calc_confusion_matrix(ds_validation, model, NUM_CLASSES, threshold=VAL_THRESHOLD, print_in_terminal=True)
 
                 # Print CM for prediction dataset and plot graph using matplotlib
                 print('Confusion matrix for prediction dataset:')
@@ -342,7 +342,7 @@ while(True):
                     ds_pred = fcn.tune_pred_img(ds_pred)
 
                 # Threshold value is determined by the ROC curve
-                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=PRED_THREASHOLD, print_in_terminal=True)
+                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=PRED_THRESHOLD, print_in_terminal=True)
                 vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True) 
 
     ##################
@@ -370,15 +370,15 @@ while(True):
 
                     # Prediction dataset
                     roc_ds_pred = fcn.calc_roc_curve(ds_pred, model)
-                    print('Best threshold for prediction dataset: %f, G-Mean: %.3f' % (roc_ds_pred['thr'], roc_ds_pred['gmeans']))
+                    print('Best threshold for prediction dataset: %f' % (roc_ds_pred['thr']))
                     # Print ROC data for test and validation dataset (if datasets are loaded)
                     if('ds_train' in globals()): 
                         # Test dataset
                         roc_ds_test = fcn.calc_roc_curve(ds_test, model)
-                        print('Best threshold for test dataset: %f, G-Mean: %.3f' % (roc_ds_test['thr'], roc_ds_test['gmeans']))
+                        print('Best threshold for test dataset: %f' % (roc_ds_test['thr']))
                         # Validation dataset
                         roc_ds_val = fcn.calc_roc_curve(ds_validation, model)
-                        print('Best threshold for validation dataset: %f, G-Mean: %.3f' % (roc_ds_val['thr'], roc_ds_val['gmeans']))   
+                        print('Best threshold for validation dataset: %f' % (roc_ds_val['thr']))   
                     else:
                         roc_ds_test = False
                         roc_ds_val = False     
@@ -386,7 +386,7 @@ while(True):
                 # Plot ROC curve
                 vis.plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
 
-                # checkpoint-20-0.95_2cl_4x
+                # for checkpoint checkpoint-22-0.94_2cl_4x
 
     ################
     # Exit Program #
