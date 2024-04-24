@@ -15,8 +15,7 @@ import keras
 import sys
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
-# import matplotlib.pyplot as plt
-# from itertools import product
+from sklearn.metrics import precision_recall_curve
 import os
 import glob
 import numpy as np
@@ -246,7 +245,6 @@ def predict_single_img(model, data_path, subfolder, img_name, color_mode, class_
     # Predict probabilities: return of a 2D numpy array (why 2D?)
     print(f"Predict class of image \"{img_name}\":")
     probabilities = model.predict(img, verbose=0)
-    # print(probabilities)  
     # Connect probability with the respective class label
     # Binary classification
     if(num_classes == 2):
@@ -267,20 +265,6 @@ def predict_single_img(model, data_path, subfolder, img_name, color_mode, class_
         print(f"({pred_probability:.2f}%, 0%={class_names[0]}, 100%={class_names[1]}, thr={threshold})")  
     elif(num_classes > 2):
         print(f"({pred_probability:.2f}%)")
-
-# Function returns a dict with all indices and layer names
-# of all cnn layers in the model as list
-def get_cnn_layer_info(model):
-    conv_layers_index = []
-    for idx, layer in enumerate(model.layers):
-        if 'cnn' in layer.name:
-            conv_layers_index.append(
-                {
-                    "index": idx,
-                    "name": layer.name,
-                }
-            )
-    return conv_layers_index
 
 # Function returns a list with all class names
 # = names of all subfolders in the data folder
@@ -408,8 +392,44 @@ def calc_roc_curve(dataset, model):
     
     # Return dict
     return {'fpr': fpr, 'tpr': tpr, 'thr_index': ix, 'thr': threshold[ix], 'auc': auc_roc}
-    
 
+# Calculates and returns the parameters for a Precision-Recall-Curve
+# tpr = true positive rate, fpr = false positive rate
+# Reqires the sklearn library (scikit-learn)! No idea how to do that with tensorflow/keras alone  
+# https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
+def calc_prec_rec_curve(dataset, model):
+    # Get labels and predictions of prediction dataset
+    labels, predict = get_labels_and_prediction(dataset, model)  
+    # Calculate Precision-Recall_curve parameters
+    prec, rec, threshold = precision_recall_curve(labels, predict) 
+    # Convert to f score
+    # F-Measure = (2 * Precision * Recall) / (Precision + Recall)
+    fscore = (2 * prec * rec) / (prec + rec) 
+    # locate the index of the largest f score
+    ix = np.argmax(fscore)
+    # Calculate line for random classifier
+    random = len(labels[labels==1]) / len(labels)
+    # Return dict
+    return {'prec': prec, 'rec': rec, 'thr_index': ix, 'thr': threshold[ix], 'rand': random}
+
+
+
+
+"""
+# Function returns a dict with all indices and layer names
+# of all cnn layers in the model as list
+def get_cnn_layer_info(model):
+    conv_layers_index = []
+    for idx, layer in enumerate(model.layers):
+        if 'cnn' in layer.name:
+            conv_layers_index.append(
+                {
+                    "index": idx,
+                    "name": layer.name,
+                }
+            )
+    return conv_layers_index
+"""
 """
 # Function counts the number of cnn layers in a model
 def num_cnn_layers(model):
@@ -418,7 +438,8 @@ def num_cnn_layers(model):
         if 'cnn' in layer.name: 
             count += 1
     return count
-
+"""
+"""
 # Convert RGB image to grayscale
 def rgb_to_gray_img(image, label):
     img = tf.image.rgb_to_grayscale(image)

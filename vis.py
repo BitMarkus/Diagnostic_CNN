@@ -5,7 +5,7 @@ from itertools import product
 import math
 import os
 from datetime import datetime
-from fcn import load_img, get_cnn_layer_info
+from fcn import load_img
 
 # Function to retain program execution while a plot is shown
 # Can be used instead of plt.show()
@@ -120,6 +120,8 @@ def plot_confusion_matrix(cm, class_names, plot_path, show_plot=True, save_plot=
 def plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, plot_path, show_plot=True, save_plot=False):
     # The lower the zorder, the more the plot is on the bottom (= background)
     plt.figure(figsize=(8, 8))
+
+    # Plot for random classifier
     plt.plot([0, 1], [0, 1], linestyle='--', label='Random', color="black")
 
     # Prediction dataset
@@ -127,7 +129,7 @@ def plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, plot_path, show_plot=Tr
                 roc_ds_pred['tpr'][roc_ds_pred['thr_index']], 
                 marker='o', 
                 s=40, 
-                color='red', 
+                color='black', 
                 label=f"Pred_ds best threshold: {roc_ds_pred['thr']:.3f}", 
                 zorder=2)
     plt.plot(roc_ds_pred['fpr'], 
@@ -189,6 +191,87 @@ def plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, plot_path, show_plot=Tr
     # Show plot
     if(show_plot):
         show_plot_exec()
+
+# Function returns a Precision-Recall plot for prediction dataset
+# Optional also for test and validation dataset
+# Parameters are the Precision-Recall data of the respective datasets as a dict via the precision_recall_curve() function
+# If this dict is False, the datasets were not loaded yet
+def plot_prc_curve(prc_ds_pred, prc_ds_test, prc_ds_val, plot_path, show_plot=True, save_plot=False):
+    # The lower the zorder, the more the plot is on the bottom (= background)
+    plt.figure(figsize=(8, 8))
+
+    # Plot for random classifier
+    plt.plot([0, 1], [prc_ds_pred['rand'], prc_ds_pred['rand']], linestyle='--', label='Random', color="black")
+
+    # Prediction dataset
+    plt.scatter(prc_ds_pred['rec'][prc_ds_pred['thr_index']], 
+                prc_ds_pred['prec'][prc_ds_pred['thr_index']], 
+                marker='o', 
+                s=40, 
+                color='black', 
+                label=f"Pred_ds best threshold: {prc_ds_pred['thr']:.3f}", 
+                zorder=2) 
+    plt.plot(   prc_ds_pred['rec'], 
+                prc_ds_pred['prec'], 
+                linewidth=2, 
+                color="red", 
+                label='Pred_ds', 
+                antialiased=False, 
+                zorder=1)
+    
+    # Validation dataset
+    if(prc_ds_val):
+        plt.scatter(prc_ds_val['rec'][prc_ds_val['thr_index']], 
+                    prc_ds_val['prec'][prc_ds_val['thr_index']], 
+                    marker='o', 
+                    s=40, 
+                    color='grey', 
+                    label=f"Val_ds best threshold: {prc_ds_val['thr']:.3f}", 
+                    zorder=4)
+        plt.plot(   prc_ds_val['rec'], 
+                    prc_ds_val['prec'], 
+                    linewidth=2, 
+                    linestyle=':', 
+                    color="grey",
+                    label='Val_ds', 
+                    antialiased=False, 
+                    zorder=3)
+    
+    # Test dataset
+    if(prc_ds_test):
+        plt.scatter(prc_ds_test['rec'][prc_ds_test['thr_index']], 
+                    prc_ds_test['prec'][prc_ds_test['thr_index']], 
+                    marker='o', 
+                    s=40, 
+                    color='black', 
+                    label=f"Test_ds best threshold: {prc_ds_test['thr']:.3f}", 
+                    zorder=6)
+        plt.plot(   prc_ds_test['rec'], 
+                    prc_ds_test['prec'], 
+                    linewidth=2, 
+                    linestyle=':', 
+                    color="black", 
+                    label='Test_ds', 
+                    antialiased=False, 
+                    zorder=5)
+
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall Curve')
+    plt.legend(loc='lower left')
+    plt.tight_layout()
+
+    # Save plot
+    # Get date and time
+    date_time = datetime.now().strftime("%Y_%m_%d-%H_%M")
+    # Generate filename
+    filename = f"PR_curve_{date_time}.png"
+    if(save_plot):
+        plt.savefig(str(plot_path) + '/' + filename, bbox_inches='tight')
+    # Show plot
+    if(show_plot):
+        show_plot_exec()
+
 
 """
 # Useful functions which are temporarily unused:

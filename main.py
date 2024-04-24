@@ -147,7 +147,7 @@ while(True):
     print("6) Predict Random Images in Predictions Subfolder")
     print("7) Predict all Images in Predictions Folder")
     print("8) Plot Confusion Matrix")
-    print("9) Plot ROC Curve (for Binary Classification)")
+    print("9) Plot ROC and PR Curve (for Binary Classification)")
     print("10) Exit Program")
     menu1 = int(menu.input_int("Please choose: "))
 
@@ -345,48 +345,75 @@ while(True):
                 cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=PRED_THRESHOLD, print_in_terminal=True)
                 vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True) 
 
-    ##################
-    # Plot ROC Curve #
-    ##################
+    #########################
+    # Plot ROC and PR Curve #
+    #########################
 
     elif(menu1 == 9):
-        print("\n:PLOT ROC CURVE:") 
+        print("\n:PLOT ROC AND PR CURVE:") 
         if('model' not in globals()):
             print('No network generated yet!')
         else:
             if(NUM_CLASSES != 2):
-                print('ROC curves are only available fo binary classifications!')
+                print('Only available fo binary classifications!')
             else:
                 # Check folders in prediction folder
                 pred_folders = fcn.get_class_names(PRED_PTH)
                 if(pred_folders != CLASS_NAMES):
                     print('Folder structure in predict/ folder does not match with dataset/ folder!')
                 else:
-                    print('Plotting ROC curve for prediction dataset:')
                     # Read Prediction dataset (if not yet done)
                     if('ds_pred' not in globals()): 
                         ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
                         ds_pred = fcn.tune_pred_img(ds_pred)
 
+                    ##################
+                    # Plot ROC Curve #
+                    ##################
+
+                    print('Plotting ROC curve:')
                     # Prediction dataset
                     roc_ds_pred = fcn.calc_roc_curve(ds_pred, model)
-                    print('Best threshold for prediction dataset: %f' % (roc_ds_pred['thr']))
+                    print('Best ROC threshold for prediction dataset: %f' % (roc_ds_pred['thr']))
                     # Print ROC data for test and validation dataset (if datasets are loaded)
                     if('ds_train' in globals()): 
                         # Test dataset
                         roc_ds_test = fcn.calc_roc_curve(ds_test, model)
-                        print('Best threshold for test dataset: %f' % (roc_ds_test['thr']))
+                        print('Best ROC threshold for test dataset: %f' % (roc_ds_test['thr']))
                         # Validation dataset
                         roc_ds_val = fcn.calc_roc_curve(ds_validation, model)
-                        print('Best threshold for validation dataset: %f' % (roc_ds_val['thr']))   
+                        print('Best ROC threshold for validation dataset: %f' % (roc_ds_val['thr']))   
                     else:
                         roc_ds_test = False
                         roc_ds_val = False     
 
-                # Plot ROC curve
-                vis.plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
+                    ###############################
+                    # Plot Precision Recall Curve #
+                    ###############################
 
-                # for checkpoint checkpoint-22-0.94_2cl_4x
+                    print('Plotting Precision-Recall-Curve:')
+                    # Prediction dataset
+                    prc_ds_pred = fcn.calc_prec_rec_curve(ds_pred, model)
+                    print('Best Precision-Recall threshold for prediction dataset: %f' % (prc_ds_pred['thr']))
+                    # Print ROC data for test and validation dataset (if datasets are loaded)
+                    if('ds_train' in globals()): 
+                        # Test dataset
+                        prc_ds_test = fcn.calc_prec_rec_curve(ds_test, model)
+                        # print(prc_ds_test)
+                        print('Best Precision-Recall threshold for test dataset: %f' % (prc_ds_test['thr']))
+                        # Validation dataset
+                        prc_ds_val = fcn.calc_prec_rec_curve(ds_validation, model)
+                        # print(prc_ds_val)
+                        print('Best Precision-Recall threshold for validation dataset: %f' % (prc_ds_val['thr']))   
+                    else:
+                        prc_ds_test = False
+                        prc_ds_val = False
+
+                    # Show and save plots
+                    vis.plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
+                    vis.plot_prc_curve(prc_ds_pred, prc_ds_test, prc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
+
+                    # for checkpoint checkpoint-22-0.94_2cl_4x
 
     ################
     # Exit Program #

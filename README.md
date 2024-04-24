@@ -31,7 +31,7 @@ The program has a menu with the following options:
 - Predict random Images in Folder: A subfolder in the prediction/ folder needs to be specified and the amount of images to predict. Then random images will be choosen and the prediction result will be displayed.
 - Predict all Images in Folder: Predicts all images in a folder
 - Plot confusion matrix: After training or loading a checkpoint, all images in the folder prediction/ will be predicted and a confusion matrix will be plotted. In addition confusion matrices for test and validation dataset will be calculated and displayed in the console.
-- Plot ROC Curve (for Binary Classification): Only works for binary classifications! This option plots a ROC curve of the prediction dataset and calculates the best threashold value for sigmoid activation function. 
+- Plot ROC and PR Curve (for Binary Classification): Only works for binary classifications! This option plots a ROC plot and a Precision-Recall plot of the prediction dataset and calculates the best threashold value for sigmoid activation function. 
 
 All program parameters are listed at the beginning of the program and can be adjusted to the specific needs. The most important ones are: image height and width in px, color mode, validation seed, batch size, validation split, and number of epochs. The learning rate is determined by a learning rate scheduler and can be found under fcn.py, function: lr_scheduler(). L2 weight decay and dropout are obsolete as global average pooling is used before the classifier instead of dense layers. Stochastic gradient descent (SGD) is used as optimizer with a momentum of 0.9. For this project it works better than ADAM.
 
