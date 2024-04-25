@@ -402,6 +402,7 @@ def calc_prec_rec_curve(dataset, model):
     labels, predict = get_labels_and_prediction(dataset, model)  
     # Calculate Precision-Recall_curve parameters
     prec, rec, threshold = precision_recall_curve(labels, predict) 
+    auc_prc = auc(rec, prec)
     # Convert to f score
     # F-Measure = (2 * Precision * Recall) / (Precision + Recall)
     fscore = (2 * prec * rec) / (prec + rec) 
@@ -410,7 +411,7 @@ def calc_prec_rec_curve(dataset, model):
     # Calculate line for random classifier
     random = len(labels[labels==1]) / len(labels)
     # Return dict
-    return {'prec': prec, 'rec': rec, 'thr_index': ix, 'thr': threshold[ix], 'rand': random}
+    return {'prec': prec, 'rec': rec, 'thr_index': ix, 'thr': threshold[ix], 'rand': random, 'auc': auc_prc}
 
 
 

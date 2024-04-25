@@ -177,7 +177,7 @@ def plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, plot_path, show_plot=Tr
         
     plt.xlabel('False positive rate (FPR)')
     plt.ylabel('True positive rate (TPR)')
-    plt.title('ROC curve')
+    plt.title('ROC Curve')
     plt.legend(loc='lower right')
     plt.tight_layout()
 
@@ -215,7 +215,7 @@ def plot_prc_curve(prc_ds_pred, prc_ds_test, prc_ds_val, plot_path, show_plot=Tr
                 prc_ds_pred['prec'], 
                 linewidth=2, 
                 color="red", 
-                label='Pred_ds', 
+                label='Pred_ds AUC: {:.3f}'.format(prc_ds_pred['auc']),
                 antialiased=False, 
                 zorder=1)
     
@@ -233,7 +233,7 @@ def plot_prc_curve(prc_ds_pred, prc_ds_test, prc_ds_val, plot_path, show_plot=Tr
                     linewidth=2, 
                     linestyle=':', 
                     color="grey",
-                    label='Val_ds', 
+                    label='Val_ds AUC: {:.3f}'.format(prc_ds_val['auc']),
                     antialiased=False, 
                     zorder=3)
     
@@ -251,7 +251,7 @@ def plot_prc_curve(prc_ds_pred, prc_ds_test, prc_ds_val, plot_path, show_plot=Tr
                     linewidth=2, 
                     linestyle=':', 
                     color="black", 
-                    label='Test_ds', 
+                    label='Test_ds AUC: {:.3f}'.format(prc_ds_test['auc']),
                     antialiased=False, 
                     zorder=5)
 
