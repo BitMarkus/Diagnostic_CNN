@@ -1,11 +1,8 @@
 import matplotlib.pyplot as plt
-from tensorflow import keras
 import numpy as np
 from itertools import product
-import math
 import os
 from datetime import datetime
-from fcn import load_img
 
 # Function to retain program execution while a plot is shown
 # Can be used instead of plt.show()
@@ -75,7 +72,7 @@ def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=True, s
     if(show_plot):
         show_plot_exec()
 
-# Returns a matplotlib figure containing the plotted confusion matrix
+# Returns a confusion matrix for prediction dataset
 # https://www.tensorflow.org/tensorboard/image_summaries
 # cm (array, shape = [n, n]): a confusion matrix of integer classes
 # class_names (array, shape = [n]): String names of the integer classes
@@ -132,12 +129,12 @@ def plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, plot_path, show_plot=Tr
                 color='black', 
                 label=f"Pred_ds best threshold: {roc_ds_pred['thr']:.3f}", 
                 zorder=2)
-    plt.plot(roc_ds_pred['fpr'], 
-             roc_ds_pred['tpr'], 
-             linewidth=2, color="red", 
-             label='Pred_ds AUC: {:.3f}'.format(roc_ds_pred['auc']), 
-             antialiased=False, 
-             zorder=1)
+    plt.plot(   roc_ds_pred['fpr'], 
+                roc_ds_pred['tpr'], 
+                linewidth=2, color="red", 
+                label='Pred_ds AUC: {:.3f}'.format(roc_ds_pred['auc']), 
+                antialiased=False, 
+                zorder=1)
     
     # Validation dataset
     if(roc_ds_val):
@@ -148,14 +145,14 @@ def plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, plot_path, show_plot=Tr
                     color='grey', 
                     label=f"Val_ds best threshold: {roc_ds_val['thr']:.3f}", 
                     zorder=4)
-        plt.plot(roc_ds_val['fpr'], 
-                roc_ds_val['tpr'], 
-                linewidth=2, 
-                linestyle=':', 
-                color="grey",
-                label='Val_ds AUC: {:.3f}'.format(roc_ds_val['auc']), 
-                antialiased=False, 
-                zorder=3)
+        plt.plot(   roc_ds_val['fpr'], 
+                    roc_ds_val['tpr'], 
+                    linewidth=2, 
+                    linestyle=':', 
+                    color="grey",
+                    label='Val_ds AUC: {:.3f}'.format(roc_ds_val['auc']), 
+                    antialiased=False, 
+                    zorder=3)
     
     # Test dataset
     if(roc_ds_test):
@@ -166,14 +163,14 @@ def plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, plot_path, show_plot=Tr
                     color='black', 
                     label=f"Test_ds best threshold: {roc_ds_test['thr']:.3f}", 
                     zorder=6)
-        plt.plot(roc_ds_test['fpr'], 
-                roc_ds_test['tpr'], 
-                linewidth=2, 
-                linestyle=':', 
-                color="black", 
-                label='Test_ds AUC: {:.3f}'.format(roc_ds_test['auc']), 
-                antialiased=False, 
-                zorder=5)
+        plt.plot(   roc_ds_test['fpr'], 
+                    roc_ds_test['tpr'], 
+                    linewidth=2, 
+                    linestyle=':', 
+                    color="black", 
+                    label='Test_ds AUC: {:.3f}'.format(roc_ds_test['auc']), 
+                    antialiased=False, 
+                    zorder=5)
         
     plt.xlabel('False positive rate (FPR)')
     plt.ylabel('True positive rate (TPR)')

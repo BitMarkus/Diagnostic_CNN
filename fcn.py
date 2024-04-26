@@ -367,14 +367,14 @@ def calc_roc_curve(dataset, model):
     auc_roc = auc(fpr, tpr)
     # Calculate sweetspot threshold
     # https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
+    ###########################################################################
+    # Variant 1:
     # Calculate the g-mean for each threshold
     # The Geometric Mean or G-Mean is a metric for imbalanced classification that, if optimized, 
     # will seek a balance between the sensitivity and the specificity.
     # G-Mean = sqrt(Sensitivity * Specificity)
     # Sensitivity = TruePositive / (TruePositive + FalseNegative) = True Positive Rate
     # Specificity = TrueNegative / (FalsePositive + TrueNegative) = 1 – False Positive Rate
-    ###########################################################################
-    # Variant 1:
     gmeans = np.sqrt(tpr * (1 - fpr))
     # Locate the index of the largest g-mean
     ix = np.argmax(gmeans)
