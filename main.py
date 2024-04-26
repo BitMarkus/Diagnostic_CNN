@@ -3,8 +3,6 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from os import listdir
 from os.path import isfile, join
-# import tensorflow as tf
-# import numpy as np
 import keras
 import pathlib
 import random
@@ -66,9 +64,9 @@ CLASS_NAMES = fcn.get_class_names(DATA_PTH)
 NUM_CLASSES = len(CLASS_NAMES)
 
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
-SEED = 377                  # 123
+SEED = 367                  # 123
 BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
-VAL_SPLIT = 0.2             # 0.2
+VAL_SPLIT = 0.25            # 0.2
 NUM_EPOCHS = 30             # 50; with a lot of training images (> 10,000), even 10 epochs are enough
 OPT_MOMENTUM = 0.9          # 0.9
 # Learning rate:
@@ -408,7 +406,7 @@ while(True):
                     vis.plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
                     vis.plot_prc_curve(prc_ds_pred, prc_ds_test, prc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
 
-                    # for checkpoint checkpoint-22-0.94_2cl_4x
+                    # checkpoint-23-0.93_2cl_4x
 
     ################
     # Exit Program #

@@ -262,7 +262,7 @@ def predict_single_img(model, data_path, subfolder, img_name, color_mode, class_
     print(f"  -> Image {img_name} belongs to class \"{pred_class_name}\" ", end="")  
     # Binary classification
     if(num_classes == 2): 
-        print(f"({pred_probability:.2f}%, 0%={class_names[0]}, 100%={class_names[1]}, thr={threshold})")  
+        print(f"({pred_probability:.2f}%, 0%={class_names[0]}, 100%={class_names[1]}, thr={(threshold*100):.2f}%)")  
     elif(num_classes > 2):
         print(f"({pred_probability:.2f}%)")
 
