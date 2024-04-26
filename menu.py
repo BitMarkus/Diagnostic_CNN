@@ -22,7 +22,25 @@ def input_int(prompt):
         if not(check_int(nr)):
             print("Input is not an integer number! Try again:")
         else:
-            return int(nr)   
+            return int(nr)  
+
+# Creates an input for entering a prediction threshold
+# If no value is entered, the standard threshold of 0.5 is used
+def input_threshold(prompt):
+    while(True):
+        thr = input(prompt)
+        if(thr == ""):
+            print(f"Standard threshold value of 0.5 is used")
+            return 0.5
+        else:
+            if not(check_nr(thr)):
+                print("Input is not an number! Try again:")
+            else:
+                thr = float(thr)
+                if(thr <= 0 or thr >= 1):
+                    print("Threshold value must be > 0 and < 1! Try again:")
+                else:
+                    return thr    
 
 ####################################        
 # Functions to check variable type #

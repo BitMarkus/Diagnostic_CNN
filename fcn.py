@@ -236,7 +236,7 @@ def load_img(pth, category, name, color_mode):
     return img
 
 # Function predicts a single image and prints output
-def predict_single_img(model, data_path, subfolder, img_name, color_mode, class_names, threshold):
+def predict_single_img(model, data_path, subfolder, img_name, color_mode, class_names, threshold=0.5):
     # Count number of classes
     num_classes = len(class_names)
     # print(class_names)
@@ -325,7 +325,7 @@ def create_prg_folders(data_pth, chkpt_pth, log_pth, plot_pth, vis_pth, pred_pth
 
 # Function returns a confusion matrix displayed in the terminal
 # for a specific dataset and a specific trained model
-def calc_confusion_matrix(dataset, model, num_classes, threshold=0.5, print_in_terminal=False):
+def calc_confusion_matrix(dataset, model, num_classes, print_in_terminal=False, threshold=0.5):
     # Get predictions and labels for the dataset
     # https://stackoverflow.com/questions/64687375/get-labels-from-dataset-when-using-tensorflow-image-dataset-from-directory
     predictions = np.array([])
@@ -413,7 +413,45 @@ def calc_prec_rec_curve(dataset, model):
     # Return dict
     return {'prec': prec, 'rec': rec, 'thr_index': ix, 'thr': threshold[ix], 'rand': random, 'auc': auc_prc}
 
-
+# Function sets the metrics for training and evaluation
+# https://www.tensorflow.org/tutorials/structured_data/imbalanced_data
+# https://stackoverflow.com/questions/66635552/keras-assessing-the-roc-auc-of-multiclass-cnn
+def set_metrics(num_classes, mode, threshold=0.5):
+    # Binary classification
+    if(num_classes == 2):
+        if(mode == 'train'):
+            # Metrics for training (without threashold)
+            metrics = [
+                keras.metrics.BinaryAccuracy(name='acc'),
+                keras.metrics.Precision(name='prec'),
+                keras.metrics.Recall(name='rec'),
+                keras.metrics.AUC(name='auc'),
+                keras.metrics.AUC(name='prc', curve='PR') # precision-recall curve
+            ]
+        elif(mode == 'eval'):
+            # Metrics for evaluation (with threashold)
+            metrics = [
+                keras.metrics.BinaryAccuracy(threshold=threshold, name='acc'),
+                keras.metrics.Precision(name='prec'),
+                keras.metrics.Recall(name='rec'),
+                keras.metrics.AUC(name='auc'),
+                keras.metrics.AUC(name='prc', curve='PR')
+            ]    
+        else:
+            return False
+        
+    # Multiclass classification
+    elif(num_classes > 2):
+        if(mode == 'train'):
+            # Metrics for training
+            metrics = ["acc"] 
+        elif(mode == 'eval'):
+            # Metrics for evaluation
+            metrics = ["acc"] 
+        else:
+            return False
+        
+    return metrics    
 
 
 """

@@ -86,38 +86,9 @@ elif(NUM_CLASSES > 2):
     LOSS = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
 
 # PREDICTION PARAMETERS #
-# Thresholds for predictions (sigmoid activation) 
+# Standard threshold for predictions (sigmoid activation) 
 # Only for binary classifications!
-PRED_THRESHOLD = 0.5 # for checkpoint-22-0.94_2cl_4x, V1: 0.05764821916818619, V2: 0.024850474670529366
-TEST_THRESHOLD = 0.5
-VAL_THRESHOLD = 0.5
-
-# METRICS #
-# https://www.tensorflow.org/tutorials/structured_data/imbalanced_data
-# https://stackoverflow.com/questions/66635552/keras-assessing-the-roc-auc-of-multiclass-cnn
-# ROC only for binary classifications!
-if(NUM_CLASSES == 2):
-    # Metrics for training (without threashold)
-    METRICS_TRAIN = [
-        keras.metrics.BinaryAccuracy(name='acc'),
-        keras.metrics.Precision(name='prec'),
-        keras.metrics.Recall(name='rec'),
-        keras.metrics.AUC(name='auc'),
-        keras.metrics.AUC(name='prc', curve='PR') # precision-recall curve
-    ]
-    # Metrics for evaluation (with threashold)
-    METRICS_EVAL = [
-        keras.metrics.BinaryAccuracy(threshold=PRED_THRESHOLD, name='acc'),
-        keras.metrics.Precision(name='prec'),
-        keras.metrics.Recall(name='rec'),
-        keras.metrics.AUC(name='auc'),
-        keras.metrics.AUC(name='prc', curve='PR')
-    ]    
-elif(NUM_CLASSES > 2):
-    # Metrics for training
-    METRICS_TRAIN = ["acc"] 
-    # Metrics for evaluation
-    METRICS_EVAL = ["acc"] 
+STD_THRESHOLD = 0.5
 
 # CACHE PARAMETERS #
 # Parameter to determine if training dataset is suppose to be cached
@@ -206,12 +177,14 @@ while(True):
             if(CACHE_DS and CACHE_ON_DRIVE and CLEAR_CACHE):
                 fcn.clear_ds_cache(CACHE_PTH)
 
+            # Set metrics for training (without threshold)
+            metrics_train = fcn.set_metrics(NUM_CLASSES, 'train')
+
             # Compile model
             model.compile(
-                # from_logits=False: Softmax on output layer
                 loss=LOSS,
                 optimizer=OPT,
-                metrics=METRICS_TRAIN,
+                metrics=metrics_train,
             )
 
             # Get list with callbacks
@@ -266,6 +239,13 @@ while(True):
             # Number of images for prediction in the folder "predictions"
             num_img = menu.input_int('Enter number of images to predict: ')
             img_pth = PRED_PTH / subfolder
+
+            # Input for threshold (binary classification)
+            if(NUM_CLASSES == 2):
+                pred_threshold = menu.input_threshold('Enter threshold (press enter for 0.5): ')
+            else:
+                pred_threshold = STD_THRESHOLD
+
             # Check if the folder exists within the predict folder
             if(os.path.isdir(img_pth)): 
                 # Get a list of all files in the specified folder
@@ -278,7 +258,7 @@ while(True):
                     # print(choice_list)
                     # Make predictions
                     for pred_img in choice_list:
-                        fcn.predict_single_img(model, PRED_PTH, subfolder, pred_img, COLOR_MODE, CLASS_NAMES, PRED_THRESHOLD)
+                        fcn.predict_single_img(model, PRED_PTH, subfolder, pred_img, COLOR_MODE, CLASS_NAMES, pred_threshold)
                 else:
                     print(f"Not enough images in folder (max {len(folder_list)})!")     
             else:
@@ -298,11 +278,20 @@ while(True):
                 ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
                 ds_pred = fcn.tune_pred_img(ds_pred)
 
+            # Input for threshold (binary classification)
+            if(NUM_CLASSES == 2):
+                pred_threshold = menu.input_threshold('Enter threshold (press enter for 0.5): ')
+            else:
+                pred_threshold = STD_THRESHOLD
+
+            # Set metrics for evaluation (with threshold)
+            metrics_eval = fcn.set_metrics(NUM_CLASSES, 'eval', pred_threshold)
+
             # Compile model
             model.compile(
                 loss=LOSS,
                 optimizer=OPT,
-                metrics=METRICS_EVAL,
+                metrics=metrics_eval,
             )
             print("Evaluate model with prediction dataset:")
             model.evaluate(ds_pred, verbose=1) 
@@ -328,12 +317,18 @@ while(True):
             if(pred_folders != CLASS_NAMES):
                 print('Folder structure in predict/ folder does not match with dataset/ folder!')
             else:
+                # Input for threshold (binary classification)
+                if(NUM_CLASSES == 2):
+                    pred_threshold = menu.input_threshold('Enter threshold (press enter for 0.5): ')
+                else:
+                    pred_threshold = STD_THRESHOLD
+
                 # Print CM for test and validation dataset (if datasets are loaded)
                 if('ds_train' in globals()): 
                     print('Confusion matrix for test dataset:')   
-                    fcn.calc_confusion_matrix(ds_test, model, NUM_CLASSES, threshold=TEST_THRESHOLD, print_in_terminal=True)  
+                    fcn.calc_confusion_matrix(ds_test, model, NUM_CLASSES, print_in_terminal=True)  
                     print('Confusion matrix for validation dataset:')  
-                    fcn.calc_confusion_matrix(ds_validation, model, NUM_CLASSES, threshold=VAL_THRESHOLD, print_in_terminal=True)
+                    fcn.calc_confusion_matrix(ds_validation, model, NUM_CLASSES, print_in_terminal=True)
 
                 # Print CM for prediction dataset and plot graph using matplotlib
                 print('Confusion matrix for prediction dataset:')
@@ -342,7 +337,7 @@ while(True):
                     ds_pred = fcn.tune_pred_img(ds_pred)
 
                 # Threshold value is determined by the ROC curve
-                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, threshold=PRED_THRESHOLD, print_in_terminal=True)
+                cm = fcn.calc_confusion_matrix(ds_pred, model, NUM_CLASSES, print_in_terminal=True, threshold=pred_threshold)
                 vis.plot_confusion_matrix(cm, CLASS_NAMES, PLOT_PTH, show_plot=True, save_plot=True) 
 
     #########################
