@@ -3,10 +3,12 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from os import listdir
 from os.path import isfile, join
+import tensorflow as tf
 import keras
 import pathlib
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 # Import own classes and functions
 from xception import xception_model
 import fcn
@@ -65,9 +67,11 @@ NUM_CLASSES = len(CLASS_NAMES)
 
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
 SEED = 367                  # 123
-BATCH_SIZE = 32             # max 32 for 512x512px grayscale or rgb images
-VAL_SPLIT = 0.25            # 0.2
-NUM_EPOCHS = 30             # 50; with a lot of training images (> 10,000), even 10 epochs are enough
+BATCH_SIZE = 32             # Max 32 for 512x512px grayscale or rgb images
+VAL_SPLIT = 0.25            # Fraction of images in the training folder, which is reserved for validation and test
+TEST_SPLIT = 0.25           # Fraction of batches from the validation split which gos to test dataset, rest stays in validation dataset
+                            # Should not be 0 or 1, or else the respective dataset is empty. So far this will cause an error and will be adressed in future
+NUM_EPOCHS = 30             # With a lot of training images (> 10,000), even 10 epochs are enough
 OPT_MOMENTUM = 0.9          # 0.9
 # Learning rate:
 # If the lr callback isn't disabled, the lr is determined by the learning rate scheduler!
@@ -153,7 +157,17 @@ while(True):
         print("\n:LOAD TRAINING DATA:")  
         print("Classes: ", CLASS_NAMES)   
         # Get training, validation and test data
-        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, VAL_SPLIT, SEED, CLASS_NAMES) 
+        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, VAL_SPLIT, TEST_SPLIT, SEED, CLASS_NAMES) 
+        # Get number of images and mini batches in each dataset
+        # https://stackoverflow.com/questions/63097533/how-to-obtain-the-number-of-files-in-tf-keras-preprocessing-image-dataset-from-d
+        print("Splitting validation dataset further in a test and validation dataset.")
+        print(f'> Training dataset: number of images={len(ds_train.file_paths)}', end='')
+        print(f', mini-batches={tf.data.experimental.cardinality(ds_train)}')
+        print(f'> Validation dataset: number of images={len(np.concatenate([i for x, i in ds_validation], axis=0))}', end='')
+        print(f', mini-batches={tf.data.experimental.cardinality(ds_validation)}')
+        print(f'> Test dataset: number of images={len(np.concatenate([i for x, i in ds_test], axis=0))}', end='')
+        print(f', mini-batches={tf.data.experimental.cardinality(ds_test)}')
+        print(f'> Batch size: {BATCH_SIZE}')
         # Data tuning
         ds_train, ds_validation, ds_test = fcn.tune_img(ds_train, ds_validation, ds_test, CACHE_DS, CACHE_ON_DRIVE, CACHE_PTH, CACHE_NAME)
         # Data augmentation -> Flipping the image is not helpful because of the orientation of the DIC images

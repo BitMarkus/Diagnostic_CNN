@@ -22,7 +22,7 @@ import numpy as np
 from pathlib import Path
 
 # Prepare training, validation and test dataset
-def get_ds(data_dir, batch_size, img_height, img_width, color_mode, val_split, seed, class_names):
+def get_ds(data_dir, batch_size, img_height, img_width, color_mode, val_split, test_split, seed, class_names):
     # Training dataset:
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,                               # directory with training images, classes in seperate folders
@@ -55,10 +55,11 @@ def get_ds(data_dir, batch_size, img_height, img_width, color_mode, val_split, s
     # source: https://stackoverflow.com/questions/66036271/splitting-a-tensorflow-dataset-into-training-test-and-validation-sets-from-ker
     # determine how many batches of data are available in the validation set:
     num_batches = tf.data.experimental.cardinality(ds_validation)
-    # move the two-third of them (2/3 of 30% = 20%) to a test set
-    # // = rounded to the next smallest whole number = integer division
-    ds_test = ds_validation.take((2*num_batches) // 3)
-    ds_validation = ds_validation.skip((2*num_batches) // 3)
+    # Split validation dataset further into a validation dataset (at the end of each epoch)
+    # and test dataset (at the end of the training)
+    # Split batches according to the constant TEST_SPLIT
+    ds_test = ds_validation.take(np.floor(int(num_batches)*test_split))
+    ds_validation = ds_validation.skip(np.floor(int(num_batches)*test_split))
     return ds_train, ds_validation, ds_test
 
 # Prepare evaluation dataset
