@@ -22,12 +22,12 @@ import numpy as np
 from pathlib import Path
 
 # Prepare training, validation and test dataset
-def get_ds(data_dir, batch_size, img_height, img_width, color_mode, val_split, test_split, seed, class_names):
+def get_ds(data_dir, batch_size, img_height, img_width, color_mode, label_mode, val_split, test_split, seed, class_names):
     # Training dataset:
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,                               # directory with training images, classes in seperate folders
         labels='inferred',                      # lables are taken from subfolder names
-        label_mode="int",                       # OR categorical, binary
+        label_mode=label_mode,                       # OR categorical, binary
         class_names=class_names, 
         color_mode=color_mode,                  # grayscale OR rgb
         batch_size=batch_size,
@@ -41,7 +41,7 @@ def get_ds(data_dir, batch_size, img_height, img_width, color_mode, val_split, t
     ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,                              
         labels='inferred',                     
-        label_mode="int",  
+        label_mode=label_mode,  
         class_names=class_names,                      
         color_mode=color_mode,                     
         batch_size=batch_size,
@@ -63,12 +63,12 @@ def get_ds(data_dir, batch_size, img_height, img_width, color_mode, val_split, t
     return ds_train, ds_validation, ds_test
 
 # Prepare evaluation dataset
-def get_pred_ds(pred_dir, batch_size, img_height, img_width, color_mode, class_names):
+def get_pred_ds(pred_dir, batch_size, img_height, img_width, color_mode, label_mode, class_names):
     # Training dataset:
     ds_pred = tf.keras.preprocessing.image_dataset_from_directory(
         pred_dir,                               
         labels='inferred',                      
-        label_mode="int", 
+        label_mode=label_mode, 
         class_names=class_names,                     
         color_mode=color_mode,                
         batch_size=batch_size,
@@ -269,6 +269,9 @@ def predict_single_img(model, data_path, subfolder, img_name, color_mode, class_
 
 # Function returns a list with all class names
 # = names of all subfolders in the data folder
+# It also controls what is the negative and what is the positive class for binary classification
+# To make ko cells the positive class, the alphabetical order needs to be switched
+# https://medium.com/@asimango/the-positive-class-what-should-it-be-in-a-machine-learning-binary-classification-problem-36c316da1127
 # https://www.techiedelight.com/list-all-subdirectories-in-directory-python/
 def get_class_names(data_dir):
     class_list = []
@@ -278,7 +281,11 @@ def get_class_names(data_dir):
         if os.path.isdir(d): 
             class_list.append(file)
     # sort list alphabetically
-    class_list.sort()
+    num_classes = len(class_list)
+    if(num_classes == 2):
+        class_list.sort(reverse = True)
+    elif(num_classes > 2):
+        class_list.sort()
     return class_list
 
 def set_growth_and_print_versions(print_versions=True):

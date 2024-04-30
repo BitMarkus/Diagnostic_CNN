@@ -64,9 +64,18 @@ CHKPT_FILE_PTH = pathlib.Path(CHKPT_PTH / "checkpoint-{epoch:02d}-{val_acc:.2f}.
 # Class names according to the subfolder structure in the data (and prediction) folder 
 CLASS_NAMES = fcn.get_class_names(DATA_PTH)
 NUM_CLASSES = len(CLASS_NAMES)
+# Set label mode for binary/multiclass classification
+# For binary classification, ko cells need to be the positive class (labeled as 1)
+# and wt cells the negative class (labeld as 0)
+# The negative case (class 0) is taken as “normal” and the positive case (class 1) is taken as an outlier or anomaly
+# This is determined by the get_class_names() function (order of sorting the class name list)
+if(NUM_CLASSES == 2):
+    LABEL_MODE = 'binary'
+elif(NUM_CLASSES > 2):
+    LABEL_MODE = 'int'
 
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
-SEED = 367                  # 123
+SEED = 189                  # 123
 BATCH_SIZE = 32             # Max 32 for 512x512px grayscale or rgb images
 VAL_SPLIT = 0.25            # Fraction of images in the training folder, which is reserved for validation and test
 TEST_SPLIT = 0.25           # Fraction of batches from the validation split which gos to test dataset, rest stays in validation dataset
@@ -157,7 +166,7 @@ while(True):
         print("\n:LOAD TRAINING DATA:")  
         print("Classes: ", CLASS_NAMES)   
         # Get training, validation and test data
-        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, VAL_SPLIT, TEST_SPLIT, SEED, CLASS_NAMES) 
+        ds_train, ds_validation, ds_test = fcn.get_ds(DATA_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, LABEL_MODE, VAL_SPLIT, TEST_SPLIT, SEED, CLASS_NAMES) 
         # Get number of images and mini batches in each dataset
         # https://stackoverflow.com/questions/63097533/how-to-obtain-the-number-of-files-in-tf-keras-preprocessing-image-dataset-from-d
         print("Splitting validation dataset further in a test and validation dataset.")
@@ -287,7 +296,7 @@ while(True):
         else:
             # Get dataset for prediction
             if('ds_pred' not in globals()): 
-                ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
+                ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, LABEL_MODE, CLASS_NAMES)
                 ds_pred = fcn.tune_pred_img(ds_pred)
 
             # Input for threshold (binary classification)
@@ -345,7 +354,7 @@ while(True):
                 # Print CM for prediction dataset and plot graph using matplotlib
                 print('Confusion matrix for prediction dataset:')
                 if('ds_pred' not in globals()): 
-                    ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
+                    ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, LABEL_MODE, CLASS_NAMES)
                     ds_pred = fcn.tune_pred_img(ds_pred)
 
                 # Threshold value is determined by the ROC curve
@@ -371,7 +380,7 @@ while(True):
                 else:
                     # Read Prediction dataset (if not yet done)
                     if('ds_pred' not in globals()): 
-                        ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, CLASS_NAMES)
+                        ds_pred = fcn.get_pred_ds(PRED_PTH, BATCH_SIZE, IMG_HEIGHT, IMG_WIDTH, COLOR_MODE, LABEL_MODE, CLASS_NAMES)
                         ds_pred = fcn.tune_pred_img(ds_pred)
 
                     ##################
@@ -420,7 +429,7 @@ while(True):
                     vis.plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
                     vis.plot_prc_curve(prc_ds_pred, prc_ds_test, prc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
 
-                    # checkpoint-23-0.93_2cl_4x
+                    # checkpoint-28-0.93_2cl_4x
 
     ################
     # Exit Program #
