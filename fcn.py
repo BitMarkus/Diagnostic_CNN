@@ -343,10 +343,13 @@ def calc_confusion_matrix(dataset, model, num_classes, print_in_terminal=False, 
         # Binary classification
         if(num_classes == 2):
             predictions = np.concatenate((predictions, (model.predict(x, verbose=0) > threshold).astype("int32")), axis=None)
+            labels = np.concatenate((labels, y), axis=None)  
         # Multiple classes
         elif(num_classes > 2):
             predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
-        labels = np.concatenate((labels, y), axis=0)              
+            labels = np.concatenate((labels, y), axis=0)  
+    # Convert labels to integers
+    labels.astype("int32")           
     cm = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=num_classes).numpy()
     # print(predictions)
     # print(labels)
@@ -355,21 +358,29 @@ def calc_confusion_matrix(dataset, model, num_classes, print_in_terminal=False, 
     return cm  
 
 # Function returns true and predicted labels for a specific dataset
-def get_labels_and_prediction(dataset, model):
+def get_labels_and_prediction(dataset, model, num_classes):
     predict = np.array([])
     labels = np.array([])
     for x, y in dataset:
-        labels = np.concatenate((labels, y), axis=0) 
-        predict = np.concatenate((predict, model.predict(x, verbose=0)), axis=None)   
+        # Binary classification
+        if(num_classes == 2):
+            labels = np.concatenate((labels, y), axis=None) 
+            predict = np.concatenate((predict, model.predict(x, verbose=0)), axis=None)   
+        # Multiple classes
+        elif(num_classes > 2):
+            labels = np.concatenate((labels, y), axis=0) 
+            predict = np.concatenate((predict, model.predict(x, verbose=0)), axis=None)  
+    # Convert labels to integers
+    labels.astype("int32")               
     return labels, predict  
 
 # Calculates and returns the parameters for a ROC curve
 # tpr = true positive rate, fpr = false positive rate
 # Reqires the sklearn library (scikit-learn)! No idea how to do that with tensorflow/keras alone
 # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html
-def calc_roc_curve(dataset, model):
+def calc_roc_curve(dataset, model, num_classes):
     # Get labels and predictions of prediction dataset
-    labels, predict = get_labels_and_prediction(dataset, model)
+    labels, predict = get_labels_and_prediction(dataset, model, num_classes)
     # Calculate ROC parameters and AUC using sklearn
     fpr, tpr, threshold = roc_curve(labels, predict)
     auc_roc = auc(fpr, tpr)
@@ -405,9 +416,9 @@ def calc_roc_curve(dataset, model):
 # tpr = true positive rate, fpr = false positive rate
 # Reqires the sklearn library (scikit-learn)! No idea how to do that with tensorflow/keras alone  
 # https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
-def calc_prec_rec_curve(dataset, model):
+def calc_prec_rec_curve(dataset, model, num_classes):
     # Get labels and predictions of prediction dataset
-    labels, predict = get_labels_and_prediction(dataset, model)  
+    labels, predict = get_labels_and_prediction(dataset, model, num_classes)  
     # Calculate Precision-Recall_curve parameters
     prec, rec, threshold = precision_recall_curve(labels, predict) 
     auc_prc = auc(rec, prec)

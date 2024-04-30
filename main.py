@@ -67,7 +67,8 @@ NUM_CLASSES = len(CLASS_NAMES)
 # Set label mode for binary/multiclass classification
 # For binary classification, ko cells need to be the positive class (labeled as 1)
 # and wt cells the negative class (labeld as 0)
-# The negative case (class 0) is taken as “normal” and the positive case (class 1) is taken as an outlier or anomaly
+# The negative case (class 0) is taken as “normal” and the positive case (class 1) is taken as an outlier or anomaly:
+# https://machinelearningmastery.com/one-class-classification-algorithms/
 # This is determined by the get_class_names() function (order of sorting the class name list)
 if(NUM_CLASSES == 2):
     LABEL_MODE = 'binary'
@@ -389,15 +390,15 @@ while(True):
 
                     print('Plotting ROC curve:')
                     # Prediction dataset
-                    roc_ds_pred = fcn.calc_roc_curve(ds_pred, model)
+                    roc_ds_pred = fcn.calc_roc_curve(ds_pred, model, NUM_CLASSES)
                     print('Best ROC threshold for prediction dataset: %f' % (roc_ds_pred['thr']))
                     # Print ROC data for test and validation dataset (if datasets are loaded)
                     if('ds_train' in globals()): 
                         # Test dataset
-                        roc_ds_test = fcn.calc_roc_curve(ds_test, model)
+                        roc_ds_test = fcn.calc_roc_curve(ds_test, model, NUM_CLASSES)
                         print('Best ROC threshold for test dataset: %f' % (roc_ds_test['thr']))
                         # Validation dataset
-                        roc_ds_val = fcn.calc_roc_curve(ds_validation, model)
+                        roc_ds_val = fcn.calc_roc_curve(ds_validation, model, NUM_CLASSES)
                         print('Best ROC threshold for validation dataset: %f' % (roc_ds_val['thr']))   
                     else:
                         roc_ds_test = False
@@ -409,16 +410,16 @@ while(True):
 
                     print('Plotting Precision-Recall-Curve:')
                     # Prediction dataset
-                    prc_ds_pred = fcn.calc_prec_rec_curve(ds_pred, model)
+                    prc_ds_pred = fcn.calc_prec_rec_curve(ds_pred, model, NUM_CLASSES)
                     print('Best Precision-Recall threshold for prediction dataset: %f' % (prc_ds_pred['thr']))
                     # Print ROC data for test and validation dataset (if datasets are loaded)
                     if('ds_train' in globals()): 
                         # Test dataset
-                        prc_ds_test = fcn.calc_prec_rec_curve(ds_test, model)
+                        prc_ds_test = fcn.calc_prec_rec_curve(ds_test, model, NUM_CLASSES)
                         # print(prc_ds_test)
                         print('Best Precision-Recall threshold for test dataset: %f' % (prc_ds_test['thr']))
                         # Validation dataset
-                        prc_ds_val = fcn.calc_prec_rec_curve(ds_validation, model)
+                        prc_ds_val = fcn.calc_prec_rec_curve(ds_validation, model, NUM_CLASSES)
                         # print(prc_ds_val)
                         print('Best Precision-Recall threshold for validation dataset: %f' % (prc_ds_val['thr']))   
                     else:
@@ -429,7 +430,7 @@ while(True):
                     vis.plot_roc_curve(roc_ds_pred, roc_ds_test, roc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
                     vis.plot_prc_curve(prc_ds_pred, prc_ds_test, prc_ds_val, PLOT_PTH, show_plot=True, save_plot=True)
 
-                    # checkpoint-28-0.93_2cl_4x
+                    # checkpoint-24-0.94_2cl_4x
 
     ################
     # Exit Program #
