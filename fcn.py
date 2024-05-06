@@ -27,7 +27,7 @@ def get_ds(data_dir, batch_size, img_height, img_width, color_mode, label_mode, 
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
         data_dir,                               # directory with training images, classes in seperate folders
         labels='inferred',                      # lables are taken from subfolder names
-        label_mode=label_mode,                       # OR categorical, binary
+        label_mode=label_mode,                  # int, categorical, binary
         class_names=class_names, 
         color_mode=color_mode,                  # grayscale OR rgb
         batch_size=batch_size,
@@ -349,7 +349,8 @@ def calc_confusion_matrix(dataset, model, num_classes, print_in_terminal=False, 
             predictions = np.concatenate([predictions, np.argmax(model.predict(x, verbose=0), axis=-1)])
             labels = np.concatenate((labels, y), axis=0)  
     # Convert labels to integers
-    labels.astype("int32")           
+    labels.astype("int32")         
+    # Calculate confusion matrix  
     cm = tf.math.confusion_matrix(labels=labels, predictions=predictions, num_classes=num_classes).numpy()
     # print(predictions)
     # print(labels)

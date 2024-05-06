@@ -76,6 +76,9 @@ def plot_metrics(train_history, eval_history, plot_path, seed, show_plot=True, s
 # https://www.tensorflow.org/tensorboard/image_summaries
 # cm (array, shape = [n, n]): a confusion matrix of integer classes
 # class_names (array, shape = [n]): String names of the integer classes
+# For binary classification wt is the negative class (0) and ko is the positive class (1)
+# This type of confusion matrix has the true labels on the y-axis and the predicted labels on the x-axis
+# The true positives suppose to be in the upper left corner, but it isn't ---> TO DO!
 def plot_confusion_matrix(cm, class_names, plot_path, show_plot=True, save_plot=False):
     figure = plt.figure(figsize=(8, 8))
     img = plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)

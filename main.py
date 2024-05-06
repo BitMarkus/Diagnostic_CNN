@@ -76,10 +76,10 @@ elif(NUM_CLASSES > 2):
     LABEL_MODE = 'int'
 
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
-SEED = 189                  # 123
+SEED = 222                  
 BATCH_SIZE = 32             # Max 32 for 512x512px grayscale or rgb images
-VAL_SPLIT = 0.25            # Fraction of images in the training folder, which is reserved for validation and test
-TEST_SPLIT = 0.25           # Fraction of batches from the validation split which gos to test dataset, rest stays in validation dataset
+VAL_SPLIT = 0.1             # Fraction of images in the training folder, which is reserved for validation and test
+TEST_SPLIT = 0.2            # Fraction of batches from the validation split which gos to test dataset, rest stays in validation dataset
                             # Should not be 0 or 1, or else the respective dataset is empty. So far this will cause an error and will be adressed in future
 NUM_EPOCHS = 30             # With a lot of training images (> 10,000), even 10 epochs are enough
 OPT_MOMENTUM = 0.9          # 0.9
@@ -103,10 +103,10 @@ elif(NUM_CLASSES > 2):
 STD_THRESHOLD = 0.5
 
 # CACHE PARAMETERS #
-# Parameter to determine if training dataset is suppose to be cached
+# Parameter to determine wether training dataset is suppose to be cached
 # If the dataset is big, caching needs to be done to the HDD or else you ran out of RAM
 # Caching the dataset makes training faster, but it requires a lot of hard disk space or RAM
-CACHE_DS = True
+CACHE_DS = False
 # Parameter determines if data is cached to memory or hard disk drive
 # True: data is cached as a file on the hard disk drive, False: cached to RAM
 CACHE_ON_DRIVE = False
