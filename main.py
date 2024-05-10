@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 # Import own classes and functions
 from xception import xception_model
+# from vgg import vgg_model
 import fcn
 import vis
 import menu
@@ -19,8 +20,8 @@ import menu
 fcn.set_growth_and_print_versions(print_versions=True)
 
 # IMAGE PARAMETERS #
-IMG_HEIGHT = 512
-IMG_WIDTH = 512 
+IMG_HEIGHT = 512 # 512
+IMG_WIDTH = 512  # 512 
 COLOR_MODE = 'rgb'  # Or 'grayscale'
 # Number of channels depending on color mode
 if(COLOR_MODE == 'rgb'):
@@ -76,7 +77,7 @@ elif(NUM_CLASSES > 2):
     LABEL_MODE = 'int'
 
 # NETWORK HYPERPARAMETERS FOR XCEPTION NETWORK #
-SEED = 222                  
+SEED = 111                  # Any int number. Determines how the images are randomly assigned to training, test and validation datasets
 BATCH_SIZE = 32             # Max 32 for 512x512px grayscale or rgb images
 VAL_SPLIT = 0.1             # Fraction of images in the training folder, which is reserved for validation and test
 TEST_SPLIT = 0.2            # Fraction of batches from the validation split which gos to test dataset, rest stays in validation dataset
@@ -145,7 +146,8 @@ while(True):
             print("A network already exists!")
         else:
             print("Creating new network...")
-            model = xception_model(IMG_SHAPE, NUM_CLASSES)       
+            model = xception_model(IMG_SHAPE, NUM_CLASSES)  
+            # model = vgg_model(IMG_SHAPE, NUM_CLASSES)      
             print("New network finished.")
 
     ########################
